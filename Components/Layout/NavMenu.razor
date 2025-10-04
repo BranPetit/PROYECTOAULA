@@ -1,0 +1,98 @@
+﻿@* 
+    NavMenu.razor
+    Este componente define el menú lateral de navegación de la aplicación.
+    Aquí se colocan los enlaces a las distintas páginas (componentes .razor).
+    Por defecto la plantilla incluye: Home, Counter y Weather.
+    Se ha eliminado Weather porque era un ejemplo de la plantilla.
+    Más adelante aquí se agregará el acceso a la página de Productos.
+*@
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Sistema Gestion Proyectos</a>
+        <button title="Toggle navigation" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        @* Enlace a la página Home (Index) *@
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+             
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="usuarios">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Usuarios
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="tipoproductos">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo Productos
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="tipoproyectos">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo Proyectos
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="tiporesponsables">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo Responsables
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="estados">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Estados
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="variableestrategicas">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Variables Estrategicas
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="transformacionesinstitucionales">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Transformaciones Institucionales
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="entregables">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Entregables
+            </NavLink>
+        </div>
+
+    </nav>
+</div>
+
+@code {
+    private bool colapsado = true;
+
+    /*
+        Propiedad que define la clase CSS aplicada al contenedor del menú.
+
+        Se usa un operador ternario:
+        - Si colapsado == true → retorna "collapse"
+        - Si colapsado == false → retorna null (sin clase)
+
+        Nota: Se declara como string? porque puede devolver un valor nulo.
+        Esto evita el warning CS8603 ("possible null reference return").
+    */
+    private string? NavMenuCssClass => colapsado ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        colapsado = !colapsado;
+    }
+}

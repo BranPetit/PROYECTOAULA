@@ -1,0 +1,336 @@
+@page "/transformacionesinstitucionales"
+@using System.Net.Http.Json
+@using System.ComponentModel.DataAnnotations
+@using FrontendBlazorApi.Models
+@inject IHttpClientFactory fabricaHttp
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Transformaciones Institucionales</PageTitle>
+
+<h3>Gestión de Transformaciones Institucionales</h3>
+
+<!-- Botones globales -->
+<div class="mb-3 d-flex gap-2">
+    <button type="button" class="btn btn-outline-secondary" @onclick="ProbarConexion">Probar conexión</button>
+    <button type="button" class="btn btn-outline-primary" @onclick="CargarTransformaciones">Mostrar todos</button>
+    <button type="button" class="btn btn-outline-dark" @onclick="LimpiarFormulario">Limpiar</button>
+</div>
+
+<!-- Buscador por ID -->
+<div class="mb-3 d-flex gap-2">
+    <InputNumber class="form-control" placeholder="Ingrese ID para buscar" @bind-Value="idBusqueda" />
+    <button type="button" class="btn btn-secondary" @onclick="BuscarPorId">Buscar</button>
+</div>
+
+<!-- Mensajes de estado -->
+@if (!string.IsNullOrWhiteSpace(mensaje))
+{
+    <div class="@claseAviso" role="alert">@mensaje</div>
+}
+
+<h4>Formulario de Transformación Institucional</h4>
+
+<EditForm Model="transformacionActual" OnValidSubmit="GuardarSegunEstado">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Código TI *</label>
+            <InputText class="form-control" @bind-Value="transformacionActual.CodigoTI" />
+            <ValidationMessage For="@(() => transformacionActual.CodigoTI)" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Nombre *</label>
+            <InputText class="form-control" @bind-Value="transformacionActual.Nombre" />
+            <ValidationMessage For="@(() => transformacionActual.Nombre)" />
+        </div>
+
+        <div class="col-md-5">
+            <label class="form-label">Descripción *</label>
+            <InputText class="form-control" @bind-Value="transformacionActual.Descripcion" />
+            <ValidationMessage For="@(() => transformacionActual.Descripcion)" />
+        </div>
+    </div>
+
+    <div class="mt-3 d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary">@textoBotonGuardar</button>
+        <button type="button" class="btn btn-warning" @onclick="ActualizarTransformacion" disabled="@(!existeTransformacion)">Actualizar</button>
+        <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeTransformacion)">Eliminar</button>
+    </div>
+</EditForm>
+
+<hr />
+
+@if (cargando)
+{
+    <p><em>Cargando transformaciones...</em></p>
+}
+else if (listaTransformaciones.Count == 0)
+{
+    <p>No hay transformaciones institucionales disponibles.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Código TI</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in listaTransformaciones)
+            {
+                <tr>
+                    <td>@e.Id</td>
+                    <td>@e.CodigoTI</td>
+                    <td>@e.Nombre</td>
+                    <td>@e.Descripcion</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                @onclick="@(() => CargarEnFormulario(e))">
+                            Cargar
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<TransformacionInstitucional> listaTransformaciones = new();
+    [SupplyParameterFromForm]
+    private TransformacionInstitucional transformacionActual { get; set; } = new();
+
+    private int idBusqueda { get; set; }
+    private bool existeTransformacion = false;
+    private string textoBotonGuardar = "Crear";
+    private string mensaje = "";
+    private string claseAviso = "alert alert-info";
+    private bool cargando = false;
+
+    private const string urlBaseApi = "api/transformacioninstitucional";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarTransformaciones();
+    }
+
+    private async Task CargarTransformaciones()
+    {
+        try
+        {
+            cargando = true;
+            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
+            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<TransformacionInstitucional>>>(urlBaseApi);
+            listaTransformaciones = respuesta?.Datos ?? new();
+            mensaje = $"Se cargaron {listaTransformaciones.Count} transformaciones.";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al listar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+        finally { cargando = false; }
+    }
+
+    private async Task BuscarPorId()
+    {
+        if (idBusqueda == 0)
+        {
+            mensaje = "Debe indicar un ID válido.";
+            claseAviso = "alert alert-warning";
+            return;
+        }
+
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
+            var ruta = $"{urlBaseApi}/id/{idBusqueda}";
+            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<TransformacionInstitucional>>>(ruta);
+
+            if (respuesta?.Datos is null || !respuesta.Datos.Any())
+            {
+                mensaje = $"No se encontró la transformación institucional con ID {idBusqueda}.";
+                claseAviso = "alert alert-warning";
+                existeTransformacion = false;
+                textoBotonGuardar = "Crear";
+                transformacionActual = new TransformacionInstitucional();
+                return;
+            }
+
+            var encontrado = respuesta.Datos.First();
+            transformacionActual = encontrado;
+            existeTransformacion = true;
+            textoBotonGuardar = "Actualizar";
+            mensaje = "Transformación cargada.";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"No existe la transformación con ID {idBusqueda}: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task GuardarSegunEstado()
+    {
+        if (existeTransformacion)
+            await ActualizarTransformacion();
+        else
+            await CrearTransformacion();
+    }
+
+    private async Task CrearTransformacion()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
+            var transformacionParaCrear = new
+            {
+                CodigoTI = transformacionActual.CodigoTI,
+                Nombre = transformacionActual.Nombre,
+                Descripcion = transformacionActual.Descripcion
+            };
+
+            var resp = await cliente.PostAsJsonAsync(urlBaseApi, transformacionParaCrear);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Transformación creada correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarTransformaciones();
+                LimpiarFormulario();
+            }
+            else
+            {
+                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al crear: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ActualizarTransformacion()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
+            var ruta = $"{urlBaseApi}/id/{transformacionActual.Id}";
+
+            var transformacionParaActualizar = new
+            {
+                CodigoTI = transformacionActual.CodigoTI,
+                Nombre = transformacionActual.Nombre,
+                Descripcion = transformacionActual.Descripcion
+            };
+
+            var resp = await cliente.PutAsJsonAsync(ruta, transformacionParaActualizar);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Actualizado correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarTransformaciones();
+            }
+            else
+            {
+                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al actualizar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar la transformación institucional con ID {transformacionActual.Id}?");
+        if (confirmado)
+            await EliminarTransformacion();
+    }
+
+    private async Task EliminarTransformacion()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
+            var ruta = $"{urlBaseApi}/id/{transformacionActual.Id}";
+            var resp = await cliente.DeleteAsync(ruta);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Eliminado correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarTransformaciones();
+                LimpiarFormulario();
+            }
+            else
+            {
+                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al eliminar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ProbarConexion()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
+            var resp = await cliente.GetAsync(urlBaseApi);
+            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
+            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error de conexión: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private void CargarEnFormulario(TransformacionInstitucional e)
+    {
+        transformacionActual = new TransformacionInstitucional
+        {
+            Id = e.Id,
+            CodigoTI = e.CodigoTI,
+            Nombre = e.Nombre,
+            Descripcion = e.Descripcion
+        };
+        existeTransformacion = true;
+        textoBotonGuardar = "Actualizar";
+        mensaje = "Transformación cargada desde listado.";
+        claseAviso = "alert alert-info";
+    }
+
+    private void LimpiarFormulario()
+    {
+        transformacionActual = new TransformacionInstitucional();
+        transformacionActual.Id = 0;
+        existeTransformacion = false;
+        textoBotonGuardar = "Crear";
+        mensaje = "";
+        claseAviso = "alert alert-info";
+    }
+}

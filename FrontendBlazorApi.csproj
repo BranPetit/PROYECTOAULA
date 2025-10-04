@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="webapicsharp">
+      <HintPath>..\..\webapicsharp (5)\webapicsharp (5)\webapicsharp (5)\webapicsharp\bin\Debug\net8.0\webapicsharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

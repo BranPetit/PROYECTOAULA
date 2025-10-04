@@ -1,0 +1,66 @@
+﻿@page "/"
+
+@using FrontendBlazorApi.Models
+@inject NavigationManager Navigation
+
+<PageTitle>Sistema de Gestión de Proyectos</PageTitle>
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">📊 Sistema de Gestión de Proyectos</h1>
+    <p class="text-center text-muted mb-5">Bienvenido al panel principal. Aquí puedes gestionar proyectos, entregables y responsables.</p>
+
+    <div class="row g-4">
+        <!-- Card Proyectos -->
+        <!-- Card Proyectos -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100 text-center">
+                <div class="card-body">
+                    <h2 class="card-title text-primary">📁 Proyectos</h2>
+                    <p class="card-text text-muted">Administra proyectos estratégicos y su avance.</p>
+                    <NavLink class="btn btn-outline-primary" href="/tipoproyectos">
+                        Ver Proyectos
+                    </NavLink>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Entregables -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100 text-center">
+                <div class="card-body">
+                    <h2 class="card-title text-success">📦 Entregables</h2>
+                    <p class="card-text text-muted">Consulta y gestiona los entregables del sistema.</p>
+                    <NavLink class="btn btn-outline-success" href="/entregables">
+                        Ver Entregables
+                    </NavLink>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Responsables -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100 text-center">
+                <div class="card-body">
+                    <h2 class="card-title text-warning">👤 Responsables</h2>
+                    <p class="card-text text-muted">Controla los responsables de cada proyecto y entregable.</p>
+                    <NavLink class="btn btn-outline-warning" href="/tiporesponsables">
+                        Ver Responsables
+                    </NavLink>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Variables Estratégicas -->
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100 text-center">
+                <div class="card-body">
+                    <h2 class="card-title text-danger">🎯 Variables</h2>
+                    <p class="card-text text-muted">Monitorea las variables estratégicas del sistema.</p>
+                    <NavLink class="btn btn-outline-danger" href="/variableestrategicas">
+                        Ver Variables
+                    </NavLink>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

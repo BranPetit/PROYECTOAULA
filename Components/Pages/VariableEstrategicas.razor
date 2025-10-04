@@ -1,0 +1,334 @@
+@page "/variableestrategicas"
+@using System.Net.Http.Json
+@using System.ComponentModel.DataAnnotations
+@using FrontendBlazorApi.Models
+@inject IHttpClientFactory fabricaHttp
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Variables Estratégicas</PageTitle>
+
+<h3>Gestión de Variables Estratégicas</h3>
+
+<!-- Botones globales -->
+<div class="mb-3 d-flex gap-2">
+    <button type="button" class="btn btn-outline-secondary" @onclick="ProbarConexion">Probar conexión</button>
+    <button type="button" class="btn btn-outline-primary" @onclick="CargarItems">Mostrar todos</button>
+    <button type="button" class="btn btn-outline-dark" @onclick="LimpiarFormulario">Limpiar</button>
+</div>
+
+<!-- Buscador por ID -->
+<div class="mb-3 d-flex gap-2">
+    <InputNumber class="form-control" placeholder="Ingrese ID para buscar" @bind-Value="idBusqueda" />
+    <button type="button" class="btn btn-secondary" @onclick="BuscarPorId">Buscar</button>
+</div>
+
+<!-- Mensajes de estado -->
+@if (!string.IsNullOrWhiteSpace(mensaje))
+{
+    <div class="@claseAviso" role="alert">@mensaje</div>
+}
+
+<h4>Formulario de Variable Estratégica</h4>
+
+<EditForm Model="itemActual" OnValidSubmit="GuardarSegunEstado">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row g-3">
+        
+        <div class="col-md-4">
+            <label class="form-label">Título *</label>
+            <InputText class="form-control" @bind-Value="itemActual.Titulo" />
+            <ValidationMessage For="@(() => itemActual.Titulo)" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Descripción *</label>
+            <InputText class="form-control" @bind-Value="itemActual.Descripcion" />
+            <ValidationMessage For="@(() => itemActual.Descripcion)" />
+        </div>
+    </div>
+
+    <div class="mt-3 d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary">@textoBotonGuardar</button>
+        <button type="button" class="btn btn-warning" @onclick="ActualizarItem" disabled="@(!existeItem)">Actualizar</button>
+        <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeItem)">Eliminar</button>
+    </div>
+</EditForm>
+
+<hr />
+
+@if (cargando)
+{
+    <p><em>Cargando variables estratégicas...</em></p>
+}
+else if (listaItems.Count == 0)
+{
+    <p>No hay registros disponibles.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var i in listaItems)
+            {
+                <tr>
+                    <td>@i.Id</td>
+                    <td>@i.Titulo</td>
+                    <td>@i.Descripcion</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                @onclick="@(() => CargarEnFormulario(i))">
+                            Cargar
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<VariableEstrategica> listaItems = new();
+    [SupplyParameterFromForm]
+    private VariableEstrategica itemActual { get; set; } = new();
+
+    private int idBusqueda { get; set; }
+    private bool existeItem = false;
+    private string textoBotonGuardar = "Crear";
+    private string mensaje = "";
+    private string claseAviso = "alert alert-info";
+    private bool cargando = false;
+
+    private const string urlBaseApi = "api/variableestrategica";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarItems();
+    }
+
+    private async Task CargarItems()
+    {
+        try
+        {
+            cargando = true;
+            var cliente = fabricaHttp.CreateClient("ApiVariableEstrategica");
+            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<VariableEstrategica>>>(urlBaseApi);
+            listaItems = respuesta?.Datos ?? new();
+            mensaje = $"Se cargaron {listaItems.Count} registro(s).";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al listar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+        finally { cargando = false; }
+    }
+
+    private async Task BuscarPorId()
+    {
+        if (idBusqueda == 0)
+        {
+            mensaje = "Debe indicar un ID válido.";
+            claseAviso = "alert alert-warning";
+            return;
+        }
+
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiVariableEstrategica");
+            var ruta = $"{urlBaseApi}/id/{idBusqueda}";
+            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<VariableEstrategica>>>(ruta);
+
+            if (respuesta?.Datos is null || !respuesta.Datos.Any())
+            {
+                mensaje = $"No se encontró un registro con ID {idBusqueda}.";
+                claseAviso = "alert alert-warning";
+                existeItem = false;
+                textoBotonGuardar = "Crear";
+                itemActual = new VariableEstrategica();
+                return;
+            }
+
+            var encontrado = respuesta.Datos.First();
+            itemActual = encontrado;
+            existeItem = true;
+            textoBotonGuardar = "Actualizar";
+            mensaje = "Registro cargado.";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al buscar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task GuardarSegunEstado()
+    {
+        if (existeItem)
+            await ActualizarItem();
+        else
+            await CrearItem();
+    }
+
+    private async Task CrearItem()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiVariableEstrategica");
+
+            var nuevo = new
+            {
+                Titulo = itemActual.Titulo,
+                Descripcion = itemActual.Descripcion
+            };
+
+            var resp = await cliente.PostAsJsonAsync(urlBaseApi, nuevo);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Registro creado correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarItems();
+                LimpiarFormulario();
+            }
+            else
+            {
+                mensaje = $"No se pudo crear. Detalle: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al crear: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ActualizarItem()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiVariableEstrategica");
+            var ruta = $"{urlBaseApi}/id/{itemActual.Id}";
+
+            var actualizar = new
+            {
+                Titulo = itemActual.Titulo,
+                Descripcion = itemActual.Descripcion
+            };
+
+            var resp = await cliente.PutAsJsonAsync(ruta, actualizar);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Registro actualizado correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarItems();
+            }
+            else
+            {
+                mensaje = $"No se pudo actualizar. Detalle: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al actualizar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar el registro con ID {itemActual.Id}?");
+        if (confirmado)
+            await EliminarItem();
+    }
+
+    private async Task EliminarItem()
+    {
+        if (itemActual.Id == 0)
+        {
+            mensaje = "Debe indicar un ID válido.";
+            claseAviso = "alert alert-warning";
+            return;
+        }
+
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiVariableEstrategica");
+            var ruta = $"{urlBaseApi}/id/{itemActual.Id}";
+            var resp = await cliente.DeleteAsync(ruta);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Registro eliminado.";
+                claseAviso = "alert alert-success";
+                await CargarItems();
+                LimpiarFormulario();
+            }
+            else
+            {
+                mensaje = $"No se pudo eliminar. Detalle: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al eliminar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ProbarConexion()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiVariableEstrategica");
+            var resp = await cliente.GetAsync(urlBaseApi);
+            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
+            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error de conexión: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private void CargarEnFormulario(VariableEstrategica i)
+    {
+        itemActual = new VariableEstrategica
+        {
+            Id = i.Id,
+            Titulo = i.Titulo,
+            Descripcion = i.Descripcion
+        };
+        existeItem = true;
+        textoBotonGuardar = "Actualizar";
+        mensaje = "Registro cargado desde listado.";
+        claseAviso = "alert alert-info";
+    }
+
+    private void LimpiarFormulario()
+    {
+        itemActual = new VariableEstrategica();
+        itemActual.Id = 0;
+        existeItem = false;
+        textoBotonGuardar = "Crear";
+        mensaje = "";
+        claseAviso = "alert alert-info";
+    }
+}
