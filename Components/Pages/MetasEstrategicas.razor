@@ -1,4 +1,4 @@
-@page "/metaestrategicas"
+@page "/metas-estrategicas"
 @using System.Net.Http.Json
 @using FrontendBlazorApi.Models
 @inject IHttpClientFactory fabricaHttp
@@ -7,105 +7,145 @@
 
 <PageTitle>Gestión de Metas Estratégicas</PageTitle>
 
-<h3>Gestión de Metas Estratégicas</h3>
-
-<!-- Botones principales -->
-<div class="mb-3 d-flex gap-2">
-    <button class="btn btn-outline-secondary" @onclick="ProbarConexion">Probar conexión</button>
-    <button class="btn btn-outline-primary" @onclick="CargarMetas">Mostrar todos</button>
-    <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">Limpiar</button>
-</div>
-
-<!-- Buscador -->
-<div class="mb-3 d-flex gap-2">
-    <InputNumber class="form-control" placeholder="Ingrese ID de meta" @bind-Value="idBusqueda" />
-    <button class="btn btn-secondary" @onclick="BuscarPorId">Buscar</button>
+<!-- ENCABEZADO PRINCIPAL -->
+<div class="d-flex align-items-center mb-3">
+    <i class="bi bi-flag fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión de Metas Estratégicas</h3>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(mensaje))
 {
-    <div class="@claseAviso" role="alert">@mensaje</div>
+    <div class="@claseAviso shadow-sm mb-3" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>@mensaje
+    </div>
 }
 
-<h4>Formulario de Meta Estratégica</h4>
-
-<EditForm Model="metaActual" OnValidSubmit="GuardarSegunEstado">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label class="form-label">Objetivo Estratégico *</label>
-            <InputSelect class="form-select" @bind-Value="metaActual.IdObjetivo">
-                <option value="0">-- Seleccione --</option>
-                @foreach (var o in listaObjetivos)
-                {
-                    <option value="@o.Id">@o.Titulo</option>
-                }
-            </InputSelect>
-            <ValidationMessage For="@(() => metaActual.IdObjetivo)" />
-        </div>
-
-        <div class="col-md-6">
-            <label class="form-label">Título *</label>
-            <InputText class="form-control" @bind-Value="metaActual.Titulo" />
-            <ValidationMessage For="@(() => metaActual.Titulo)" />
-        </div>
-
-        <div class="col-md-12">
-            <label class="form-label">Descripción</label>
-            <InputTextArea class="form-control" @bind-Value="metaActual.Descripcion" rows="3" />
-        </div>
+<!-- BLOQUE FORMULARIO -->
+<div class="card border-primary shadow-sm mb-4">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-pencil-square me-2"></i>Formulario de Meta Estratégica
     </div>
 
-    <div class="mt-3 d-flex gap-2 flex-wrap">
-        <button type="submit" class="btn btn-primary">@textoBotonGuardar</button>
-        <button type="button" class="btn btn-warning" @onclick="ActualizarMeta" disabled="@(!existeMeta)">Actualizar</button>
-        <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeMeta)">Eliminar</button>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion">
+                <i class="bi bi-wifi"></i>
+            </button>
+            <button class="btn btn-outline-primary" @onclick="CargarMetas">
+                <i class="bi bi-list"></i>
+            </button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">
+                <i class="bi bi-eraser"></i>
+            </button>
+        </div>
+
+        <div class="input-group mb-4">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <InputNumber class="form-control" placeholder="Ingrese ID de meta" @bind-Value="idBusqueda" />
+            <button class="btn btn-secondary" @onclick="BuscarPorId">
+                <i class="bi bi-arrow-right-circle"></i>
+            </button>
+        </div>
+
+        <EditForm Model="metaActual" OnValidSubmit="GuardarSegunEstado">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Objetivo Estratégico *</label>
+                    <InputSelect class="form-select" @bind-Value="metaActual.IdObjetivo">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var o in listaObjetivos)
+                        {
+                            <option value="@o.Id">@o.Titulo</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => metaActual.IdObjetivo)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Título *</label>
+                    <InputText class="form-control" @bind-Value="metaActual.Titulo" />
+                    <ValidationMessage For="@(() => metaActual.Titulo)" />
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Descripción</label>
+                    <InputTextArea class="form-control" @bind-Value="metaActual.Descripcion" rows="3" />
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i>
+                </button>
+                <button type="button" class="btn btn-warning" @onclick="ActualizarMeta" disabled="@(!existeMeta)">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeMeta)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </EditForm>
     </div>
-</EditForm>
+</div>
 
-<hr />
+<!-- BLOQUE LISTA -->
+<div class="card border-primary shadow-sm">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-table me-2"></i>Lista de Metas Estratégicas
+    </div>
 
-@if (cargando)
-{
-    <p><em>Cargando metas estratégicas...</em></p>
-}
-else if (listaMetas.Count == 0)
-{
-    <p>No hay metas estratégicas disponibles.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Título</th>
-                <th>Objetivo Estratégico</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var m in listaMetas)
-            {
-                <tr>
-                    <td>@m.Id</td>
-                    <td>@m.Titulo</td>
-                    <td>@(GetObjetivoNombre(m.IdObjetivo))</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(m))">Cargar</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+    <div class="card-body">
+        @if (cargando)
+        {
+            <p><em><i class="bi bi-arrow-repeat"></i> Cargando metas...</em></p>
+        }
+        else if (listaMetas.Count == 0)
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>No hay metas registradas.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Título</th>
+                            <th>Objetivo Estratégico</th>
+                            <th>Descripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in listaMetas)
+                        {
+                            <tr>
+                                <td>@m.Id</td>
+                                <td>@m.Titulo</td>
+                                <td>@(GetObjetivoNombre(m.IdObjetivo))</td>
+                                <td>@m.Descripcion</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(m))">
+                                        <i class="bi bi-upload"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     private List<MetaEstrategica> listaMetas = new();
     private List<ObjetivoEstrategico> listaObjetivos = new();
-
     private MetaEstrategica metaActual = new();
     private int idBusqueda;
     private bool existeMeta = false;
@@ -113,7 +153,6 @@ else
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
-
     private const string urlBaseApi = "api/metaestrategica";
 
     protected override async Task OnInitializedAsync()
@@ -126,10 +165,11 @@ else
     {
         try
         {
-            var http = fabricaHttp.CreateClient("ApiMetaEstrategica");
-            listaObjetivos = (await http.GetFromJsonAsync<RespuestaApi<List<ObjetivoEstrategico>>>("api/objetivoestrategico"))?.Datos ?? new();
+            var cliente = fabricaHttp.CreateClient("ApiMetaEstrategica");
+            var respObjs = await cliente.GetFromJsonAsync<RespuestaApi<List<ObjetivoEstrategico>>>("api/objetivoestrategico");
+            listaObjetivos = respObjs?.Datos ?? new();
         }
-        catch { }
+        catch { listaObjetivos = new(); }
     }
 
     private async Task CargarMetas()
@@ -140,12 +180,12 @@ else
             var cliente = fabricaHttp.CreateClient("ApiMetaEstrategica");
             var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<MetaEstrategica>>>(urlBaseApi);
             listaMetas = resp?.Datos ?? new();
-            mensaje = $"Se cargaron {listaMetas.Count} meta(s) estratégicas.";
+            mensaje = $"Se cargaron {listaMetas.Count} meta(s).";
             claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
-            mensaje = $"Error al listar: {ex.Message}";
+            mensaje = $"Error al listar metas: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
         finally { cargando = false; }
@@ -164,8 +204,9 @@ else
         {
             var cliente = fabricaHttp.CreateClient("ApiMetaEstrategica");
             var ruta = $"{urlBaseApi}/id/{idBusqueda}";
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<MetaEstrategica>>>(ruta);
-            if (resp?.Datos is null || !resp.Datos.Any())
+            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<MetaEstrategica>>>(ruta);
+
+            if (respuesta?.Datos is null || !respuesta.Datos.Any())
             {
                 mensaje = $"No se encontró una meta con ID {idBusqueda}.";
                 claseAviso = "alert alert-warning";
@@ -175,10 +216,10 @@ else
                 return;
             }
 
-            metaActual = resp.Datos.First();
+            metaActual = respuesta.Datos.First();
             existeMeta = true;
             textoBotonGuardar = "Actualizar";
-            mensaje = "Meta estratégica cargada.";
+            mensaje = "Meta cargada.";
             claseAviso = "alert alert-success";
         }
         catch (Exception ex)
@@ -207,12 +248,11 @@ else
                 Titulo = metaActual.Titulo,
                 Descripcion = metaActual.Descripcion
             };
-
             var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
 
             if (resp.IsSuccessStatusCode)
             {
-                mensaje = "Meta estratégica creada correctamente.";
+                mensaje = "Meta creada correctamente.";
                 claseAviso = "alert alert-success";
                 await CargarMetas();
                 LimpiarFormulario();
@@ -242,12 +282,11 @@ else
                 Titulo = metaActual.Titulo,
                 Descripcion = metaActual.Descripcion
             };
-
             var resp = await cliente.PutAsJsonAsync(ruta, payload);
 
             if (resp.IsSuccessStatusCode)
             {
-                mensaje = "Meta estratégica actualizada correctamente.";
+                mensaje = "Meta actualizada correctamente.";
                 claseAviso = "alert alert-success";
                 await CargarMetas();
             }
@@ -266,21 +305,23 @@ else
 
     private async Task ConfirmarEliminar()
     {
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar la meta '{metaActual.Titulo}'?");
+        if (metaActual.Id == 0) return;
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar la meta '{metaActual.Titulo}' (ID {metaActual.Id})?");
         if (confirmado)
-            await EliminarMeta();
+            await EliminarMeta(metaActual.Id);
     }
 
-    private async Task EliminarMeta()
+    private async Task EliminarMeta(int id)
     {
         try
         {
             var cliente = fabricaHttp.CreateClient("ApiMetaEstrategica");
-            var ruta = $"{urlBaseApi}/id/{metaActual.Id}";
+            var ruta = $"{urlBaseApi}/id/{id}";
             var resp = await cliente.DeleteAsync(ruta);
+
             if (resp.IsSuccessStatusCode)
             {
-                mensaje = "Meta estratégica eliminada correctamente.";
+                mensaje = "Meta eliminada correctamente.";
                 claseAviso = "alert alert-success";
                 await CargarMetas();
                 LimpiarFormulario();
@@ -325,7 +366,7 @@ else
         };
         existeMeta = true;
         textoBotonGuardar = "Actualizar";
-        mensaje = "Meta estratégica cargada.";
+        mensaje = "Meta cargada.";
         claseAviso = "alert alert-info";
     }
 

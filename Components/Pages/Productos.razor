@@ -7,139 +7,179 @@
 
 <PageTitle>Gestión de Productos</PageTitle>
 
-<h3>Gestión de Productos</h3>
-
-<!-- Botones principales -->
-<div class="mb-3 d-flex gap-2">
-    <button class="btn btn-outline-secondary" @onclick="ProbarConexion">Probar conexión</button>
-    <button class="btn btn-outline-primary" @onclick="CargarProductos">Mostrar todos</button>
-    <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">Limpiar</button>
-</div>
-
-<!-- Buscador -->
-<div class="mb-3 d-flex gap-2">
-    <InputNumber class="form-control" placeholder="Ingrese ID de producto" @bind-Value="idBusqueda" />
-    <button class="btn btn-secondary" @onclick="BuscarPorId">Buscar</button>
+<!-- ENCABEZADO PRINCIPAL -->
+<div class="d-flex align-items-center mb-3">
+    <i class="bi bi-box-seam fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión de Productos</h3>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(mensaje))
 {
-    <div class="@claseAviso" role="alert">@mensaje</div>
+    <div class="@claseAviso shadow-sm mb-3" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>@mensaje
+    </div>
 }
 
-<h4>Formulario de Producto</h4>
-
-<EditForm Model="productoActual" OnValidSubmit="GuardarSegunEstado">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label">Tipo de Producto *</label>
-            <InputSelect class="form-select" @bind-Value="productoActual.IdTipoProducto">
-                <option value="0">-- Seleccione --</option>
-                @foreach (var t in listaTiposProducto)
-                {
-                    <option value="@t.Id">@t.Nombre</option>
-                }
-            </InputSelect>
-        </div>
-
-        <div class="col-md-4">
-            <label class="form-label">Título *</label>
-            <InputText class="form-control" @bind-Value="productoActual.Titulo" />
-        </div>
-
-        <div class="col-md-4">
-            <label class="form-label">Código</label>
-            <InputText class="form-control" @bind-Value="productoActual.Codigo" />
-        </div>
-
-        <div class="col-md-12">
-            <label class="form-label">Descripción</label>
-            <InputTextArea class="form-control" @bind-Value="productoActual.Descripcion" rows="3" />
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Fecha de Inicio</label>
-            <InputDate class="form-control" @bind-Value="productoActual.FechaInicio" />
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Fecha Fin Prevista</label>
-            <InputDate class="form-control" @bind-Value="productoActual.FechaFinPrevista" />
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Fecha Modificación</label>
-            <InputDate class="form-control" @bind-Value="productoActual.FechaModificacion" />
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Fecha Finalización</label>
-            <InputDate class="form-control" @bind-Value="productoActual.FechaFinalizacion" />
-        </div>
-
-        <div class="col-md-6">
-            <label class="form-label">Ruta del Logo</label>
-            <InputText class="form-control" @bind-Value="productoActual.RutaLogo" placeholder="Ej: /imagenes/producto.png" />
-        </div>
+<!-- BLOQUE FORMULARIO -->
+<div class="card border-primary shadow-sm mb-4">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-pencil-square me-2"></i>Formulario de Producto
     </div>
 
-    <div class="mt-3 d-flex gap-2 flex-wrap">
-        <button type="submit" class="btn btn-primary">@textoBotonGuardar</button>
-        <button type="button" class="btn btn-warning" @onclick="ActualizarProducto" disabled="@(!existeProducto)">Actualizar</button>
-        <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeProducto)">Eliminar</button>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion">
+                <i class="bi bi-wifi"></i>
+            </button>
+            <button class="btn btn-outline-primary" @onclick="CargarProductos">
+                <i class="bi bi-list"></i>
+            </button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">
+                <i class="bi bi-eraser"></i>
+            </button>
+        </div>
+
+        <div class="input-group mb-4">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <InputNumber class="form-control" placeholder="Ingrese ID de producto" @bind-Value="idBusqueda" />
+            <button class="btn btn-secondary" @onclick="BuscarPorId">
+                <i class="bi bi-arrow-right-circle"></i>
+            </button>
+        </div>
+
+        <EditForm Model="productoActual" OnValidSubmit="GuardarSegunEstado">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Tipo de Producto *</label>
+                    <InputSelect class="form-select" @bind-Value="productoActual.IdTipoProducto">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var t in listaTiposProducto)
+                        {
+                            <option value="@t.Id">@t.Nombre</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => productoActual.IdTipoProducto)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Título *</label>
+                    <InputText class="form-control" @bind-Value="productoActual.Titulo" />
+                    <ValidationMessage For="@(() => productoActual.Titulo)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Código</label>
+                    <InputText class="form-control" @bind-Value="productoActual.Codigo" />
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Descripción</label>
+                    <InputTextArea class="form-control" @bind-Value="productoActual.Descripcion" rows="3" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha de Inicio</label>
+                    <InputDate class="form-control" @bind-Value="productoActual.FechaInicio" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Fin Prevista</label>
+                    <InputDate class="form-control" @bind-Value="productoActual.FechaFinPrevista" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Modificación</label>
+                    <InputDate class="form-control" @bind-Value="productoActual.FechaModificacion" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Finalización</label>
+                    <InputDate class="form-control" @bind-Value="productoActual.FechaFinalizacion" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Ruta del Logo</label>
+                    <InputText class="form-control" @bind-Value="productoActual.RutaLogo" placeholder="Ej: /imagenes/producto.png" />
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i>
+                </button>
+                <button type="button" class="btn btn-warning" @onclick="ActualizarProducto" disabled="@(!existeProducto)">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeProducto)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </EditForm>
     </div>
-</EditForm>
+</div>
 
-<hr />
+<!-- BLOQUE LISTA -->
+<div class="card border-primary shadow-sm">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-table me-2"></i>Lista de Productos
+    </div>
 
-@if (cargando)
-{
-    <p><em>Cargando productos...</em></p>
-}
-else if (listaProductos.Count == 0)
-{
-    <p>No hay productos disponibles.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Código</th>
-                <th>Título</th>
-                <th>Tipo</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Fin Prevista</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var p in listaProductos)
-            {
-                <tr>
-                    <td>@p.Id</td>
-                    <td>@p.Codigo</td>
-                    <td>@p.Titulo</td>
-                    <td>@(GetTipoProductoNombre(p.IdTipoProducto))</td>
-                    <td>@p.FechaInicio?.ToString("yyyy-MM-dd")</td>
-                    <td>@p.FechaFinPrevista?.ToString("yyyy-MM-dd")</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(p))">Cargar</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+    <div class="card-body">
+        @if (cargando)
+        {
+            <p><em><i class="bi bi-arrow-repeat"></i> Cargando productos...</em></p>
+        }
+        else if (listaProductos.Count == 0)
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>No hay productos disponibles.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Código</th>
+                            <th>Título</th>
+                            <th>Tipo</th>
+                            <th>Inicio</th>
+                            <th>Fin Prevista</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in listaProductos)
+                        {
+                            <tr>
+                                <td>@p.Id</td>
+                                <td>@p.Codigo</td>
+                                <td>@p.Titulo</td>
+                                <td>@(GetTipoProductoNombre(p.IdTipoProducto))</td>
+                                <td>@p.FechaInicio?.ToString("yyyy-MM-dd")</td>
+                                <td>@p.FechaFinPrevista?.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(p))">
+                                        <i class="bi bi-upload"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     private List<Producto> listaProductos = new();
     private List<TipoProducto> listaTiposProducto = new();
-
     private Producto productoActual = new();
     private int idBusqueda;
     private bool existeProducto = false;
@@ -147,7 +187,6 @@ else
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
-
     private const string urlBaseApi = "api/producto";
 
     protected override async Task OnInitializedAsync()
@@ -164,11 +203,7 @@ else
             var respTipos = await cliente.GetFromJsonAsync<RespuestaApi<List<TipoProducto>>>("api/tipoproducto");
             listaTiposProducto = respTipos?.Datos ?? new();
         }
-        catch
-        {
-            // no bloquear la UI si falla la carga de tipos
-            listaTiposProducto = new();
-        }
+        catch { listaTiposProducto = new(); }
     }
 
     private async Task CargarProductos()
@@ -215,8 +250,7 @@ else
                 return;
             }
 
-            var encontrado = respuesta.Datos.First();
-            productoActual = encontrado;
+            productoActual = respuesta.Datos.First();
             existeProducto = true;
             textoBotonGuardar = "Actualizar";
             mensaje = "Producto cargado.";
@@ -254,7 +288,6 @@ else
                 FechaFinalizacion = productoActual.FechaFinalizacion,
                 RutaLogo = productoActual.RutaLogo
             };
-
             var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
 
             if (resp.IsSuccessStatusCode)
@@ -283,7 +316,6 @@ else
         {
             var cliente = fabricaHttp.CreateClient("ApiProducto");
             var ruta = $"{urlBaseApi}/id/{productoActual.Id}";
-
             var payload = new
             {
                 IdTipoProducto = productoActual.IdTipoProducto,
@@ -296,7 +328,6 @@ else
                 FechaFinalizacion = productoActual.FechaFinalizacion,
                 RutaLogo = productoActual.RutaLogo
             };
-
             var resp = await cliente.PutAsJsonAsync(ruta, payload);
 
             if (resp.IsSuccessStatusCode)
@@ -321,7 +352,7 @@ else
     private async Task ConfirmarEliminar()
     {
         if (productoActual.Id == 0) return;
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar el producto {productoActual.Titulo} (ID {productoActual.Id})?");
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar el producto '{productoActual.Titulo}' (ID {productoActual.Id})?");
         if (confirmado)
             await EliminarProducto(productoActual.Id);
     }
