@@ -1,0 +1,436 @@
+@page "/proyectos"
+@using System.Net.Http.Json
+@using FrontendBlazorApi.Models
+@inject IHttpClientFactory fabricaHttp
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Gestión de Proyectos</PageTitle>
+
+<h3>Gestión de Proyectos</h3>
+
+<!-- Botones principales -->
+<div class="mb-3 d-flex gap-2">
+    <button class="btn btn-outline-secondary" @onclick="ProbarConexion">Probar conexión</button>
+    <button class="btn btn-outline-primary" @onclick="CargarProyectos">Mostrar todos</button>
+    <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">Limpiar</button>
+</div>
+
+<!-- Buscador -->
+<div class="mb-3 d-flex gap-2">
+    <InputNumber class="form-control" placeholder="Ingrese ID de proyecto" @bind-Value="idBusqueda" />
+    <button class="btn btn-secondary" @onclick="BuscarPorId">Buscar</button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(mensaje))
+{
+    <div class="@claseAviso" role="alert">@mensaje</div>
+}
+
+<h4>Formulario de Proyecto</h4>
+
+<EditForm Model="proyectoActual" OnValidSubmit="GuardarSegunEstado">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Proyecto Padre</label>
+            <InputSelect class="form-select" @bind-Value="proyectoActual.IdProyectoPadre">
+                <option value="">-- Ninguno --</option>
+                @foreach (var p in listaProyectosPadre)
+                {
+                    <option value="@p.Id">@p.Titulo</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Responsable *</label>
+            <InputSelect class="form-select" @bind-Value="proyectoActual.IdResponsable">
+                <option value="0">-- Seleccione --</option>
+                @foreach (var r in listaResponsables)
+                {
+                    <option value="@r.Id">@r.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => proyectoActual.IdResponsable)" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Tipo de Proyecto *</label>
+            <InputSelect class="form-select" @bind-Value="proyectoActual.IdTipoProyecto">
+                <option value="0">-- Seleccione --</option>
+                @foreach (var t in listaTiposProyecto)
+                {
+                    <option value="@t.Id">@t.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => proyectoActual.IdTipoProyecto)" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Título *</label>
+            <InputText class="form-control" @bind-Value="proyectoActual.Titulo" />
+            <ValidationMessage For="@(() => proyectoActual.Titulo)" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Código</label>
+            <InputText class="form-control" @bind-Value="proyectoActual.Codigo" />
+        </div>
+
+        <div class="col-md-12">
+            <label class="form-label">Descripción</label>
+            <InputTextArea class="form-control" @bind-Value="proyectoActual.Descripcion" rows="3" />
+        </div>
+
+        <!-- CAMPOS AGREGADOS -->
+        <div class="col-md-3">
+            <label class="form-label">Fecha de Inicio</label>
+            <InputDate class="form-control" @bind-Value="proyectoActual.FechaInicio" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Fecha Fin Prevista</label>
+            <InputDate class="form-control" @bind-Value="proyectoActual.FechaFinPrevista" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Fecha de Modificación</label>
+            <InputDate class="form-control" @bind-Value="proyectoActual.FechaModificacion" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Fecha de Finalización</label>
+            <InputDate class="form-control" @bind-Value="proyectoActual.FechaFinalizacion" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Ruta del Logo</label>
+            <InputText class="form-control" @bind-Value="proyectoActual.RutaLogo" placeholder="Ej: /imagenes/logo.png" />
+        </div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2 flex-wrap">
+        <button type="submit" class="btn btn-primary">@textoBotonGuardar</button>
+        <button type="button" class="btn btn-warning" @onclick="ActualizarProyecto" disabled="@(!existeProyecto)">Actualizar</button>
+        <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeProyecto)">Eliminar</button>
+    </div>
+</EditForm>
+
+<hr />
+
+@if (cargando)
+{
+    <p><em>Cargando proyectos...</em></p>
+}
+else if (listaProyectos.Count == 0)
+{
+    <p>No hay proyectos disponibles.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Responsable</th>
+                <th>Tipo</th>
+                <th>Proyecto Padre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in listaProyectos)
+            {
+                <tr>
+                    <td>@p.Id</td>
+                    <td>@p.Titulo</td>
+                    <td>@(GetResponsableNombre(p.IdResponsable))</td>
+                    <td>@(GetTipoProyectoNombre(p.IdTipoProyecto))</td>
+                    <td>@(GetProyectoPadreTitulo(p.IdProyectoPadre))</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(p))">Cargar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Proyecto> listaProyectos = new();
+    private List<Proyecto> listaProyectosPadre = new();
+    private List<Responsable> listaResponsables = new();
+    private List<TipoProyecto> listaTiposProyecto = new();
+
+    private Proyecto proyectoActual = new();
+    private int idBusqueda;
+    private bool existeProyecto = false;
+    private string textoBotonGuardar = "Crear";
+    private string mensaje = "";
+    private string claseAviso = "alert alert-info";
+    private bool cargando = false;
+
+    private const string urlBaseApi = "api/proyecto";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarOpcionesRelacionadas();
+        await CargarProyectos();
+    }
+
+    private async Task CargarOpcionesRelacionadas()
+    {
+        try
+        {
+            var http = fabricaHttp.CreateClient("ApiProyecto");
+            listaResponsables = (await http.GetFromJsonAsync<RespuestaApi<List<Responsable>>>("api/responsable"))?.Datos ?? new();
+            listaTiposProyecto = (await http.GetFromJsonAsync<RespuestaApi<List<TipoProyecto>>>("api/tipoproyecto"))?.Datos ?? new();
+            listaProyectosPadre = (await http.GetFromJsonAsync<RespuestaApi<List<Proyecto>>>(urlBaseApi))?.Datos ?? new();
+        }
+        catch { }
+    }
+
+    private async Task CargarProyectos()
+    {
+        try
+        {
+            cargando = true;
+            var cliente = fabricaHttp.CreateClient("ApiProyecto");
+            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Proyecto>>>(urlBaseApi);
+            listaProyectos = resp?.Datos ?? new();
+            mensaje = $"Se cargaron {listaProyectos.Count} proyecto(s).";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al listar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+        finally { cargando = false; }
+    }
+
+    private async Task BuscarPorId()
+    {
+        if (idBusqueda == 0)
+        {
+            mensaje = "Debe indicar un ID válido.";
+            claseAviso = "alert alert-warning";
+            return;
+        }
+
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiProyecto");
+            var ruta = $"{urlBaseApi}/id/{idBusqueda}";
+            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Proyecto>>>(ruta);
+            if (resp?.Datos is null || !resp.Datos.Any())
+            {
+                mensaje = $"No se encontró un proyecto con ID {idBusqueda}.";
+                claseAviso = "alert alert-warning";
+                existeProyecto = false;
+                textoBotonGuardar = "Crear";
+                proyectoActual = new Proyecto();
+                return;
+            }
+
+            proyectoActual = resp.Datos.First();
+            existeProyecto = true;
+            textoBotonGuardar = "Actualizar";
+            mensaje = "Proyecto cargado.";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al buscar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task GuardarSegunEstado()
+    {
+        if (existeProyecto)
+            await ActualizarProyecto();
+        else
+            await CrearProyecto();
+    }
+
+    private async Task CrearProyecto()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiProyecto");
+
+            var payload = new
+            {
+                IdProyectoPadre = proyectoActual.IdProyectoPadre,
+                IdResponsable = proyectoActual.IdResponsable,
+                IdTipoProyecto = proyectoActual.IdTipoProyecto,
+                Codigo = proyectoActual.Codigo,
+                Titulo = proyectoActual.Titulo,
+                Descripcion = proyectoActual.Descripcion,
+                FechaInicio = proyectoActual.FechaInicio,
+                FechaFinPrevista = proyectoActual.FechaFinPrevista,
+                FechaModificacion = proyectoActual.FechaModificacion,
+                FechaFinalizacion = proyectoActual.FechaFinalizacion,
+                RutaLogo = proyectoActual.RutaLogo
+            };
+
+            var resp = await cliente.PostAsJsonAsync("api/proyecto", payload);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Proyecto creado correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarProyectos();
+                LimpiarFormulario();
+            }
+            else
+            {
+                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al crear: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ActualizarProyecto()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiProyecto");
+            var ruta = $"api/proyecto/id/{proyectoActual.Id}";
+
+            var payload = new
+            {
+                IdProyectoPadre = proyectoActual.IdProyectoPadre,
+                IdResponsable = proyectoActual.IdResponsable,
+                IdTipoProyecto = proyectoActual.IdTipoProyecto,
+                Codigo = proyectoActual.Codigo,
+                Titulo = proyectoActual.Titulo,
+                Descripcion = proyectoActual.Descripcion,
+                FechaInicio = proyectoActual.FechaInicio,
+                FechaFinPrevista = proyectoActual.FechaFinPrevista,
+                FechaModificacion = proyectoActual.FechaModificacion,
+                FechaFinalizacion = proyectoActual.FechaFinalizacion,
+                RutaLogo = proyectoActual.RutaLogo
+            };
+
+            var resp = await cliente.PutAsJsonAsync(ruta, payload);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Proyecto actualizado correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarProyectos();
+            }
+            else
+            {
+                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al actualizar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar el proyecto {proyectoActual.Titulo}?");
+        if (confirmado)
+            await EliminarProyecto();
+    }
+
+    private async Task EliminarProyecto()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiProyecto");
+            var ruta = $"{urlBaseApi}/id/{proyectoActual.Id}";
+            var resp = await cliente.DeleteAsync(ruta);
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Proyecto eliminado correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarProyectos();
+                LimpiarFormulario();
+            }
+            else
+            {
+                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al eliminar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ProbarConexion()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiProyecto");
+            var resp = await cliente.GetAsync(urlBaseApi);
+            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
+            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error de conexión: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private void CargarEnFormulario(Proyecto p)
+    {
+        proyectoActual = new Proyecto
+        {
+            Id = p.Id,
+            IdProyectoPadre = p.IdProyectoPadre,
+            IdResponsable = p.IdResponsable,
+            IdTipoProyecto = p.IdTipoProyecto,
+            Codigo = p.Codigo,
+            Titulo = p.Titulo,
+            Descripcion = p.Descripcion,
+            FechaInicio = p.FechaInicio,
+            FechaFinPrevista = p.FechaFinPrevista,
+            FechaModificacion = p.FechaModificacion,
+            FechaFinalizacion = p.FechaFinalizacion,
+            RutaLogo = p.RutaLogo
+        };
+        existeProyecto = true;
+        textoBotonGuardar = "Actualizar";
+        mensaje = "Proyecto cargado.";
+        claseAviso = "alert alert-info";
+    }
+
+    private void LimpiarFormulario()
+    {
+        proyectoActual = new Proyecto();
+        existeProyecto = false;
+        textoBotonGuardar = "Crear";
+        mensaje = "";
+    }
+
+    private string GetResponsableNombre(int id)
+        => listaResponsables.FirstOrDefault(x => x.Id == id)?.Nombre ?? $"#{id}";
+
+    private string GetTipoProyectoNombre(int id)
+        => listaTiposProyecto.FirstOrDefault(x => x.Id == id)?.Nombre ?? $"#{id}";
+
+    private string GetProyectoPadreTitulo(int? id)
+        => id.HasValue ? listaProyectosPadre.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}" : "—";
+}
