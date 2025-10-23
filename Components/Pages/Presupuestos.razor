@@ -7,167 +7,207 @@
 
 <PageTitle>Gestión de Presupuestos</PageTitle>
 
-<h3>Gestión de Presupuestos</h3>
-
-<!-- Botones principales -->
-<div class="mb-3 d-flex gap-2">
-    <button class="btn btn-outline-secondary" @onclick="ProbarConexion">Probar conexión</button>
-    <button class="btn btn-outline-primary" @onclick="CargarPresupuestos">Mostrar todos</button>
-    <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">Limpiar</button>
-</div>
-
-<!-- Buscador -->
-<div class="mb-3 d-flex gap-2">
-    <InputNumber class="form-control" placeholder="Ingrese ID de presupuesto" @bind-Value="idBusqueda" />
-    <button class="btn btn-secondary" @onclick="BuscarPorId">Buscar</button>
+<!-- ENCABEZADO PRINCIPAL -->
+<div class="d-flex align-items-center mb-3">
+    <i class="bi bi-cash-stack fs-3 text-success me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión de Presupuestos</h3>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(mensaje))
 {
-    <div class="@claseAviso" role="alert">@mensaje</div>
+    <div class="@claseAviso shadow-sm mb-3" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>@mensaje
+    </div>
 }
 
-<h4>Formulario de Presupuesto</h4>
-
-<EditForm Model="presupuestoActual" OnValidSubmit="GuardarSegunEstado">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="row g-3">
-
-        <div class="col-md-4">
-            <label class="form-label">Proyecto *</label>
-            <InputSelect class="form-select" @bind-Value="presupuestoActual.IdProyecto">
-                <option value="0">-- Seleccione --</option>
-                @foreach (var p in listaProyectos)
-                {
-                    <option value="@p.Id">@p.Titulo</option>
-                }
-            </InputSelect>
-            <ValidationMessage For="@(() => presupuestoActual.IdProyecto)" />
-        </div>
-
-        <div class="col-md-4">
-            <label class="form-label">Monto Solicitado *</label>
-            <InputNumber class="form-control" @bind-Value="presupuestoActual.MontoSolicitado" />
-            <ValidationMessage For="@(() => presupuestoActual.MontoSolicitado)" />
-        </div>
-
-        <div class="col-md-4">
-            <label class="form-label">Monto Aprobado</label>
-            <InputNumber class="form-control" @bind-Value="presupuestoActual.MontoAprobado" />
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Estado</label>
-            <InputSelect class="form-select" @bind-Value="presupuestoActual.Estado">
-                <option value="Pendiente">Pendiente</option>
-                <option value="Aprobado">Aprobado</option>
-                <option value="Rechazado">Rechazado</option>
-            </InputSelect>
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Periodo (Año)</label>
-            <InputNumber class="form-control" @bind-Value="presupuestoActual.PeriodoAnio" />
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Fecha Solicitud</label>
-            <InputDate class="form-control" @bind-Value="presupuestoActual.FechaSolicitud" />
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Fecha Aprobación</label>
-            <InputDate class="form-control" @bind-Value="presupuestoActual.FechaAprobacion" />
-        </div>
-
-        <div class="col-md-12">
-            <label class="form-label">Observaciones</label>
-            <InputTextArea class="form-control" @bind-Value="presupuestoActual.Observaciones" rows="3" />
-        </div>
-
+<!-- BLOQUE FORMULARIO -->
+<div class="card border-success shadow-sm mb-4">
+    <div class="card-header bg-success text-white fw-bold">
+        <i class="bi bi-pencil-square me-2"></i>Formulario de Presupuesto
     </div>
 
-    <div class="mt-3 d-flex gap-2 flex-wrap">
-        <button type="submit" class="btn btn-primary">@textoBotonGuardar</button>
-        <button type="button" class="btn btn-warning" @onclick="ActualizarPresupuesto" disabled="@(!existePresupuesto)">Actualizar</button>
-        <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existePresupuesto)">Eliminar</button>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion">
+                <i class="bi bi-wifi"></i>
+            </button>
+            <button class="btn btn-outline-success" @onclick="CargarPresupuestos">
+                <i class="bi bi-list"></i>
+            </button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">
+                <i class="bi bi-eraser"></i>
+            </button>
+        </div>
+
+        <div class="input-group mb-4">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <InputNumber class="form-control" placeholder="Ingrese ID del presupuesto" @bind-Value="idBusqueda" />
+            <button class="btn btn-secondary" @onclick="BuscarPorId">
+                <i class="bi bi-arrow-right-circle"></i>
+            </button>
+        </div>
+
+        <EditForm Model="presupuestoActual" OnValidSubmit="GuardarSegunEstado">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Proyecto *</label>
+                    <InputSelect class="form-select" @bind-Value="presupuestoActual.IdProyecto">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var p in listaProyectos)
+                        {
+                            <option value="@p.Id">@p.Titulo</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => presupuestoActual.IdProyecto)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Monto Solicitado *</label>
+                    <InputNumber class="form-control" @bind-Value="presupuestoActual.MontoSolicitado" />
+                    <ValidationMessage For="@(() => presupuestoActual.MontoSolicitado)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Monto Aprobado</label>
+                    <InputNumber class="form-control" @bind-Value="presupuestoActual.MontoAprobado" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Estado</label>
+                    <InputSelect class="form-select" @bind-Value="presupuestoActual.Estado">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Aprobado">Aprobado</option>
+                        <option value="Rechazado">Rechazado</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Periodo (Año)</label>
+                    <InputNumber class="form-control" @bind-Value="presupuestoActual.PeriodoAnio" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Fecha Solicitud</label>
+                    <InputDate class="form-control" @bind-Value="presupuestoActual.FechaSolicitud" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Fecha Aprobación</label>
+                    <InputDate class="form-control" @bind-Value="presupuestoActual.FechaAprobacion" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Observaciones</label>
+                    <InputTextArea class="form-control" rows="3" @bind-Value="presupuestoActual.Observaciones" />
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i>
+                </button>
+                <button type="button" class="btn btn-warning" @onclick="ActualizarPresupuesto" disabled="@(!existePresupuesto)">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existePresupuesto)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </EditForm>
     </div>
-</EditForm>
+</div>
 
-<hr />
+<!-- BLOQUE LISTA -->
+<div class="card border-success shadow-sm">
+    <div class="card-header bg-success text-white fw-bold">
+        <i class="bi bi-table me-2"></i>Lista de Presupuestos
+    </div>
 
-@if (cargando)
-{
-    <p><em>Cargando presupuestos...</em></p>
-}
-else if (listaPresupuestos.Count == 0)
-{
-    <p>No hay presupuestos registrados.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Proyecto</th>
-                <th>Monto Solicitado</th>
-                <th>Monto Aprobado</th>
-                <th>Estado</th>
-                <th>Periodo</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var p in listaPresupuestos)
-            {
-                <tr>
-                    <td>@p.Id</td>
-                    <td>@GetProyectoNombre(p.IdProyecto)</td>
-                    <td>@p.MontoSolicitado.ToString("C")</td>
-                    <td>@(p.MontoAprobado?.ToString("C") ?? "-")</td>
-                    <td>@p.Estado</td>
-                    <td>@p.PeriodoAnio</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(p))">Cargar</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+    <div class="card-body">
+        @if (cargando)
+        {
+            <p><em><i class="bi bi-arrow-repeat"></i> Cargando presupuestos...</em></p>
+        }
+        else if (listaPresupuestos.Count == 0)
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>No hay presupuestos registrados.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Proyecto</th>
+                            <th>Monto Solicitado</th>
+                            <th>Monto Aprobado</th>
+                            <th>Estado</th>
+                            <th>Periodo</th>
+                            <th>Solicitud</th>
+                            <th>Aprobación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in listaPresupuestos)
+                        {
+                            <tr>
+                                <td>@p.Id</td>
+                                <td>@GetProyectoTitulo(p.IdProyecto)</td>
+                                <td>@p.MontoSolicitado.ToString("C")</td>
+                                <td>@(p.MontoAprobado?.ToString("C") ?? "—")</td>
+                                <td>@p.Estado</td>
+                                <td>@p.PeriodoAnio</td>
+                                <td>@p.FechaSolicitud?.ToString("yyyy-MM-dd")</td>
+                                <td>@p.FechaAprobacion?.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-success" @onclick="@(() => CargarEnFormulario(p))">
+                                        <i class="bi bi-upload"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     private List<Presupuesto> listaPresupuestos = new();
     private List<Proyecto> listaProyectos = new();
-
     private Presupuesto presupuestoActual = new();
     private int idBusqueda;
     private bool existePresupuesto = false;
-    private string textoBotonGuardar = "Crear";
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
-
     private const string urlBaseApi = "api/presupuesto";
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarProyectos();
+        await CargarOpcionesRelacionadas();
         await CargarPresupuestos();
     }
 
-    private async Task CargarProyectos()
+    private async Task CargarOpcionesRelacionadas()
     {
         try
         {
-            var http = fabricaHttp.CreateClient("ApiProyecto");
-            var resp = await http.GetFromJsonAsync<RespuestaApi<List<Proyecto>>>("api/proyecto");
-            listaProyectos = resp?.Datos ?? new();
+            var cliente = fabricaHttp.CreateClient("ApiProyecto");
+            listaProyectos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Proyecto>>>("api/proyecto"))?.Datos ?? new();
         }
-        catch { }
+        catch
+        {
+            listaProyectos = new();
+        }
     }
 
     private async Task CargarPresupuestos()
@@ -183,7 +223,7 @@ else
         }
         catch (Exception ex)
         {
-            mensaje = $"Error al listar: {ex.Message}";
+            mensaje = $"Error al listar presupuestos: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
         finally { cargando = false; }
@@ -201,20 +241,20 @@ else
         try
         {
             var cliente = fabricaHttp.CreateClient("ApiProyecto");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Presupuesto>>>($"{urlBaseApi}/id/{idBusqueda}");
-            if (resp?.Datos is null || !resp.Datos.Any())
+            var ruta = $"{urlBaseApi}/id/{idBusqueda}";
+            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<Presupuesto>>>(ruta);
+
+            if (respuesta?.Datos is null || !respuesta.Datos.Any())
             {
                 mensaje = $"No se encontró un presupuesto con ID {idBusqueda}.";
                 claseAviso = "alert alert-warning";
                 existePresupuesto = false;
-                textoBotonGuardar = "Crear";
                 presupuestoActual = new Presupuesto();
                 return;
             }
 
-            presupuestoActual = resp.Datos.First();
+            presupuestoActual = respuesta.Datos.First();
             existePresupuesto = true;
-            textoBotonGuardar = "Actualizar";
             mensaje = "Presupuesto cargado.";
             claseAviso = "alert alert-success";
         }
@@ -243,8 +283,8 @@ else
             {
                 IdProyecto = presupuestoActual.IdProyecto,
                 MontoSolicitado = presupuestoActual.MontoSolicitado,
-                Estado = presupuestoActual.Estado,
                 MontoAprobado = presupuestoActual.MontoAprobado,
+                Estado = presupuestoActual.Estado,
                 PeriodoAnio = presupuestoActual.PeriodoAnio,
                 FechaSolicitud = presupuestoActual.FechaSolicitud,
                 FechaAprobacion = presupuestoActual.FechaAprobacion,
@@ -278,20 +318,20 @@ else
         try
         {
             var cliente = fabricaHttp.CreateClient("ApiProyecto");
-            var ruta = $"{urlBaseApi}/id/{presupuestoActual.Id}";
 
             var payload = new
-            {
+            {                
                 IdProyecto = presupuestoActual.IdProyecto,
                 MontoSolicitado = presupuestoActual.MontoSolicitado,
-                Estado = presupuestoActual.Estado,
                 MontoAprobado = presupuestoActual.MontoAprobado,
+                Estado = presupuestoActual.Estado,
                 PeriodoAnio = presupuestoActual.PeriodoAnio,
                 FechaSolicitud = presupuestoActual.FechaSolicitud,
                 FechaAprobacion = presupuestoActual.FechaAprobacion,
                 Observaciones = presupuestoActual.Observaciones
             };
 
+            var ruta = $"{urlBaseApi}/id/{presupuestoActual.Id}";
             var resp = await cliente.PutAsJsonAsync(ruta, payload);
 
             if (resp.IsSuccessStatusCode)
@@ -315,17 +355,20 @@ else
 
     private async Task ConfirmarEliminar()
     {
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar el presupuesto con ID {presupuestoActual.Id}?");
+        if (presupuestoActual.Id == 0) return;
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar el presupuesto ID {presupuestoActual.Id}?");
         if (confirmado)
-            await EliminarPresupuesto();
+            await EliminarPresupuesto(presupuestoActual.Id);
     }
 
-    private async Task EliminarPresupuesto()
+    private async Task EliminarPresupuesto(int id)
     {
         try
         {
             var cliente = fabricaHttp.CreateClient("ApiProyecto");
-            var resp = await cliente.DeleteAsync($"{urlBaseApi}/id/{presupuestoActual.Id}");
+            var ruta = $"{urlBaseApi}/id/{id}";
+            var resp = await cliente.DeleteAsync(ruta);
+
             if (resp.IsSuccessStatusCode)
             {
                 mensaje = "Presupuesto eliminado correctamente.";
@@ -346,34 +389,6 @@ else
         }
     }
 
-    private void CargarEnFormulario(Presupuesto p)
-    {
-        presupuestoActual = new Presupuesto
-        {
-            Id = p.Id,
-            IdProyecto = p.IdProyecto,
-            MontoSolicitado = p.MontoSolicitado,
-            Estado = p.Estado,
-            MontoAprobado = p.MontoAprobado,
-            PeriodoAnio = p.PeriodoAnio,
-            FechaSolicitud = p.FechaSolicitud,
-            FechaAprobacion = p.FechaAprobacion,
-            Observaciones = p.Observaciones
-        };
-        existePresupuesto = true;
-        textoBotonGuardar = "Actualizar";
-        mensaje = "Presupuesto cargado.";
-        claseAviso = "alert alert-info";
-    }
-
-    private void LimpiarFormulario()
-    {
-        presupuestoActual = new Presupuesto();
-        existePresupuesto = false;
-        textoBotonGuardar = "Crear";
-        mensaje = "";
-    }
-
     private async Task ProbarConexion()
     {
         try
@@ -390,6 +405,32 @@ else
         }
     }
 
-    private string GetProyectoNombre(int id)
+    private void CargarEnFormulario(Presupuesto p)
+    {
+        presupuestoActual = new Presupuesto
+        {
+            Id = p.Id,
+            IdProyecto = p.IdProyecto,
+            MontoSolicitado = p.MontoSolicitado,
+            MontoAprobado = p.MontoAprobado,
+            Estado = p.Estado,
+            PeriodoAnio = p.PeriodoAnio,
+            FechaSolicitud = p.FechaSolicitud,
+            FechaAprobacion = p.FechaAprobacion,
+            Observaciones = p.Observaciones
+        };
+        existePresupuesto = true;
+        mensaje = "Presupuesto cargado.";
+        claseAviso = "alert alert-info";
+    }
+
+    private void LimpiarFormulario()
+    {
+        presupuestoActual = new Presupuesto();
+        existePresupuesto = false;
+        mensaje = "";
+    }
+
+    private string GetProyectoTitulo(int id)
         => listaProyectos.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
 }

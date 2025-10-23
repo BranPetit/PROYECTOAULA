@@ -1,161 +1,188 @@
 @page "/responsables"
 @using System.Net.Http.Json
-@using System.ComponentModel.DataAnnotations
 @using FrontendBlazorApi.Models
 @inject IHttpClientFactory fabricaHttp
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<PageTitle>Responsables</PageTitle>
+<PageTitle>Gestión de Responsables</PageTitle>
 
-<h3>Gestión de Responsables</h3>
-
-<!-- Botones globales -->
-<div class="mb-3 d-flex gap-2">
-    <button type="button" class="btn btn-outline-secondary" @onclick="ProbarConexion">Probar conexión</button>
-    <button type="button" class="btn btn-outline-primary" @onclick="CargarResponsables">Mostrar todos</button>
-    <button type="button" class="btn btn-outline-dark" @onclick="LimpiarFormulario">Limpiar</button>
+<!-- ENCABEZADO PRINCIPAL -->
+<div class="d-flex align-items-center mb-3">
+    <i class="bi bi-people-fill fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión de Responsables</h3>
 </div>
 
-<!-- Buscador por ID -->
-<div class="mb-3 d-flex gap-2">
-    <InputNumber class="form-control" placeholder="Ingrese ID para buscar" @bind-Value="idBusqueda" />
-    <button type="button" class="btn btn-secondary" @onclick="BuscarPorId">Buscar</button>
-</div>
-
-<!-- Mensajes de estado -->
 @if (!string.IsNullOrWhiteSpace(mensaje))
 {
-    <div class="@claseAviso" role="alert">@mensaje</div>
+    <div class="@claseAviso shadow-sm mb-3" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>@mensaje
+    </div>
 }
 
-<h4>Formulario de Responsable</h4>
-
-<EditForm Model="responsableActual" OnValidSubmit="GuardarSegunEstado">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label">Tipo Responsable *</label>
-            <InputSelect class="form-select" @bind-Value="responsableActual.IdTipoResponsable">
-                <option value="0">-- Seleccione --</option>
-                @foreach (var t in listaTiposResponsable)
-                {
-                    <option value="@t.Id">@t.Titulo</option>
-                }
-            </InputSelect>
-            <ValidationMessage For="@(() => responsableActual.IdTipoResponsable)" />
-        </div>
-
-        <div class="col-md-4">
-            <label class="form-label">Usuario *</label>
-            <InputSelect class="form-select" @bind-Value="responsableActual.IdUsuario">
-                <option value="0">-- Seleccione --</option>
-                @foreach (var u in listaUsuarios)
-                {
-                    <option value="@u.Id">@u.Email</option>
-                }
-            </InputSelect>
-            <ValidationMessage For="@(() => responsableActual.IdUsuario)" />
-        </div>
-
-        <div class="col-md-4">
-            <label class="form-label">Nombre *</label>
-            <InputText class="form-control" @bind-Value="responsableActual.Nombre" />
-            <ValidationMessage For="@(() => responsableActual.Nombre)" />
-        </div>
+<!-- BLOQUE FORMULARIO -->
+<div class="card border-primary shadow-sm mb-4">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-pencil-square me-2"></i>Formulario de Responsable
     </div>
 
-    <div class="mt-3 d-flex flex-wrap gap-2">
-        <button type="submit" class="btn btn-primary">@textoBotonGuardar</button>
-        <button type="button" class="btn btn-warning" @onclick="ActualizarResponsable" disabled="@(!existeResponsable)">Actualizar</button>
-        <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeResponsable)">Eliminar</button>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion">
+                <i class="bi bi-wifi"></i>
+            </button>
+            <button class="btn btn-outline-primary" @onclick="CargarResponsables">
+                <i class="bi bi-list"></i>
+            </button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">
+                <i class="bi bi-eraser"></i>
+            </button>
+        </div>
+
+        <div class="input-group mb-4">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <InputNumber class="form-control" placeholder="Ingrese ID de responsable" @bind-Value="idBusqueda" />
+            <button class="btn btn-secondary" @onclick="BuscarPorId">
+                <i class="bi bi-arrow-right-circle"></i>
+            </button>
+        </div>
+
+        <EditForm Model="responsableActual" OnValidSubmit="GuardarSegunEstado">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Tipo de Responsable *</label>
+                    <InputSelect class="form-select" @bind-Value="responsableActual.IdTipoResponsable">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var t in listaTipos)
+                        {
+                            <option value="@t.Id">@t.Titulo</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => responsableActual.IdTipoResponsable)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Usuario *</label>
+                    <InputSelect class="form-select" @bind-Value="responsableActual.IdUsuario">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var u in listaUsuarios)
+                        {
+                            <option value="@u.Id">@u.Email</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => responsableActual.IdUsuario)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Nombre *</label>
+                    <InputText class="form-control" @bind-Value="responsableActual.Nombre" />
+                    <ValidationMessage For="@(() => responsableActual.Nombre)" />
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i>
+                </button>
+                <button type="button" class="btn btn-warning" @onclick="ActualizarResponsable" disabled="@(!existeResponsable)">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeResponsable)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </EditForm>
     </div>
-</EditForm>
+</div>
 
-<hr />
+<!-- BLOQUE LISTA -->
+<div class="card border-primary shadow-sm">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-table me-2"></i>Lista de Responsables
+    </div>
 
-@if (cargando)
-{
-    <p><em>Cargando responsables...</em></p>
-}
-else if (listaResponsables.Count == 0)
-{
-    <p>No hay responsables disponibles.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Tipo</th>
-                <th>Usuario</th>
-                <th>Nombre</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var r in listaResponsables)
-            {
-                <tr>
-                    <td>@r.Id</td>
-                    <td>@(GetTipoTitulo(r.IdTipoResponsable))</td>
-                    <td>@(GetUsuarioEmail(r.IdUsuario))</td>
-                    <td>@r.Nombre</td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                @onclick="@(() => CargarEnFormulario(r))">
-                            Cargar
-                        </button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+    <div class="card-body">
+        @if (cargando)
+        {
+            <p><em><i class="bi bi-arrow-repeat"></i> Cargando responsables...</em></p>
+        }
+        else if (listaResponsables.Count == 0)
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>No hay responsables registrados.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Usuario</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in listaResponsables)
+                        {
+                            <tr>
+                                <td>@r.Id</td>
+                                <td>@r.Nombre</td>
+                                <td>@(GetTipoNombre(r.IdTipoResponsable))</td>
+                                <td>@(GetUsuarioNombre(r.IdUsuario))</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(r))">
+                                        <i class="bi bi-upload"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
 
 @code {
-    // listas para tabla y selects
     private List<Responsable> listaResponsables = new();
-    private List<TipoResponsable>? listaTiposResponsable = new();
-    private List<Usuario>? listaUsuarios = new();
-
-    // modelo del formulario
-    private Responsable responsableActual { get; set; } = new();
-
-    private int idBusqueda { get; set; }
+    private List<TipoResponsable> listaTipos = new();
+    private List<Usuario> listaUsuarios = new();
+    private Responsable responsableActual = new();
+    private int idBusqueda;
     private bool existeResponsable = false;
     private string textoBotonGuardar = "Crear";
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
-
     private const string urlBaseApi = "api/responsable";
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarOpcionesRelacionadas(); // Tipos y Usuarios
+        await CargarOpcionesRelacionadas();
         await CargarResponsables();
     }
 
-    // Carga de datos maestros para selects
     private async Task CargarOpcionesRelacionadas()
     {
         try
         {
-            var clienteTipo = fabricaHttp.CreateClient("ApiTipoResponsable");
-            var respTipo = await clienteTipo.GetFromJsonAsync<RespuestaApi<List<TipoResponsable>>>("api/tiporesponsable");
-            listaTiposResponsable = respTipo?.Datos ?? new();
-
-            var clienteUsuario = fabricaHttp.CreateClient("ApiUsuario");
-            var respUser = await clienteUsuario.GetFromJsonAsync<RespuestaApi<List<Usuario>>>("api/usuario");
-            listaUsuarios = respUser?.Datos ?? new();
+            var cliente = fabricaHttp.CreateClient("ApiResponsable");
+            var respTipos = await cliente.GetFromJsonAsync<RespuestaApi<List<TipoResponsable>>>("api/tiporesponsable");
+            var respUsuarios = await cliente.GetFromJsonAsync<RespuestaApi<List<Usuario>>>("api/usuario");
+            listaTipos = respTipos?.Datos ?? new();
+            listaUsuarios = respUsuarios?.Datos ?? new();
         }
         catch
         {
-            // no bloquear; los selects pueden quedar vacíos si falla
+            listaTipos = new();
+            listaUsuarios = new();
         }
     }
 
@@ -165,14 +192,14 @@ else
         {
             cargando = true;
             var cliente = fabricaHttp.CreateClient("ApiResponsable");
-            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<Responsable>>>(urlBaseApi);
-            listaResponsables = respuesta?.Datos ?? new();
+            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Responsable>>>(urlBaseApi);
+            listaResponsables = resp?.Datos ?? new();
             mensaje = $"Se cargaron {listaResponsables.Count} responsable(s).";
             claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
-            mensaje = $"Error al listar: {ex.Message}";
+            mensaje = $"Error al listar responsables: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
         finally { cargando = false; }
@@ -229,14 +256,12 @@ else
         try
         {
             var cliente = fabricaHttp.CreateClient("ApiResponsable");
-
             var payload = new
             {
                 IdTipoResponsable = responsableActual.IdTipoResponsable,
                 IdUsuario = responsableActual.IdUsuario,
                 Nombre = responsableActual.Nombre
             };
-
             var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
 
             if (resp.IsSuccessStatusCode)
@@ -265,19 +290,17 @@ else
         {
             var cliente = fabricaHttp.CreateClient("ApiResponsable");
             var ruta = $"{urlBaseApi}/id/{responsableActual.Id}";
-
             var payload = new
             {
                 IdTipoResponsable = responsableActual.IdTipoResponsable,
                 IdUsuario = responsableActual.IdUsuario,
                 Nombre = responsableActual.Nombre
             };
-
             var resp = await cliente.PutAsJsonAsync(ruta, payload);
 
             if (resp.IsSuccessStatusCode)
             {
-                mensaje = "Actualizado correctamente.";
+                mensaje = "Responsable actualizado correctamente.";
                 claseAviso = "alert alert-success";
                 await CargarResponsables();
             }
@@ -296,22 +319,23 @@ else
 
     private async Task ConfirmarEliminar()
     {
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar el responsable con ID {responsableActual.Id}?");
+        if (responsableActual.Id == 0) return;
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar el responsable '{responsableActual.Nombre}' (ID {responsableActual.Id})?");
         if (confirmado)
-            await EliminarResponsable();
+            await EliminarResponsable(responsableActual.Id);
     }
 
-    private async Task EliminarResponsable()
+    private async Task EliminarResponsable(int id)
     {
         try
         {
             var cliente = fabricaHttp.CreateClient("ApiResponsable");
-            var ruta = $"{urlBaseApi}/id/{responsableActual.Id}";
+            var ruta = $"{urlBaseApi}/id/{id}";
             var resp = await cliente.DeleteAsync(ruta);
 
             if (resp.IsSuccessStatusCode)
             {
-                mensaje = "Eliminado correctamente.";
+                mensaje = "Responsable eliminado correctamente.";
                 claseAviso = "alert alert-success";
                 await CargarResponsables();
                 LimpiarFormulario();
@@ -356,30 +380,21 @@ else
         };
         existeResponsable = true;
         textoBotonGuardar = "Actualizar";
-        mensaje = "Responsable cargado desde listado.";
+        mensaje = "Responsable cargado.";
         claseAviso = "alert alert-info";
     }
 
     private void LimpiarFormulario()
     {
         responsableActual = new Responsable();
-        responsableActual.Id = 0;
         existeResponsable = false;
         textoBotonGuardar = "Crear";
         mensaje = "";
-        claseAviso = "alert alert-info";
     }
 
-    // helpers para mostrar texto en tabla (evitan null refs)
-    private string GetTipoTitulo(int idTipo)
-    {
-        var t = listaTiposResponsable?.FirstOrDefault(x => x.Id == idTipo);
-        return t is null ? $"#{idTipo}" : t.Titulo;
-    }
+    private string GetTipoNombre(int id)
+        => listaTipos.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
 
-    private string GetUsuarioEmail(int idUsuario)
-    {
-        var u = listaUsuarios?.FirstOrDefault(x => x.Id == idUsuario);
-        return u is null ? $"#{idUsuario}" : u.Email;
-    }
+    private string GetUsuarioNombre(int id)
+        => listaUsuarios.FirstOrDefault(x => x.Id == id)?.Email ?? $"#{id}";
 }
