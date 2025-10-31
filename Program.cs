@@ -26,6 +26,21 @@ builder.Services.AddHttpClient("ApiUsuario", cliente =>
     cliente.BaseAddress = new Uri("http://localhost:5031/");
 });
 
+builder.Services.AddHttpClient("ApiProyectoProducto", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
+builder.Services.AddHttpClient("ApiProductoEntregable", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
+builder.Services.AddHttpClient("ApiMetaProyecto", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
 builder.Services.AddHttpClient("ApiTipoProducto", cliente =>
 {
     cliente.BaseAddress = new Uri("http://localhost:5031/");
@@ -95,15 +110,15 @@ builder.Services.AddHttpClient("ApiMetaEstrategica", cliente =>
  // Política CORS opcional. Útil solo si el navegador llamara
  // directamente a la API externa. Para Blazor Server no es necesario
  // si las llamadas se hacen con HttpClient en el servidor.
- const string nombrePoliticaCors = "PermitirTodo";
- builder.Services.AddCors(opciones =>
- {
-     opciones.AddPolicy(nombrePoliticaCors, politica =>
-         politica
-             .AllowAnyOrigin()
-             .AllowAnyMethod()
-             .AllowAnyHeader());
- });
+const string nombrePoliticaCors = "PermitirTodo";
+builder.Services.AddCors(opciones =>
+{
+    opciones.AddPolicy(nombrePoliticaCors, politica =>
+        politica
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 */
 
 var app = builder.Build();
@@ -132,7 +147,7 @@ app.UseAntiforgery();
 
 /*
  // Activar CORS si se definió una política anteriormente.
- app.UseCors(nombrePoliticaCors);
+app.UseCors(nombrePoliticaCors);
 */
 
 // -------------------------------
@@ -141,7 +156,7 @@ app.UseAntiforgery();
 // Se indica que el componente principal de la aplicación es App.razor.
 // Aquí arranca todo el enrutamiento y la estructura del sitio.
 app.MapRazorComponents<App>()
-   .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode();
 
 // -------------------------------
 // Inicio de la aplicación
