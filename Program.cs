@@ -91,6 +91,31 @@ builder.Services.AddHttpClient("ApiMetaEstrategica", cliente =>
     cliente.BaseAddress = new Uri("http://localhost:5031/");
 });
 
+builder.Services.AddHttpClient("ApiDistribucionPresupuesto", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
+builder.Services.AddHttpClient("ApiEjecucionPresupuesto", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
+builder.Services.AddHttpClient("ApiMeta_Proyecto", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
+builder.Services.AddHttpClient("ApiProducto_Entregable", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
+builder.Services.AddHttpClient("ApiProyecto_Producto", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
 /*
  // Política CORS opcional. Útil solo si el navegador llamara
  // directamente a la API externa. Para Blazor Server no es necesario
