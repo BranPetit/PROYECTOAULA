@@ -207,7 +207,19 @@
         try
         {
             var cliente = fabricaHttp.CreateClient("ApiArchivo");
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, archivoActual);
+
+            // 🔹 Filtro de propiedades válidas
+            var payload = new
+            {
+                IdUsuario = archivoActual.IdUsuario,
+                Nombre = archivoActual.Nombre,
+                Tipo = archivoActual.Tipo,
+                Ruta = archivoActual.Ruta,
+                Fecha = archivoActual.Fecha
+            };
+
+            var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
+
             if (resp.IsSuccessStatusCode)
             {
                 mensaje = "Archivo creado correctamente.";
@@ -234,7 +246,18 @@
         {
             var cliente = fabricaHttp.CreateClient("ApiArchivo");
             var ruta = $"{urlBaseApi}/id/{archivoActual.Id}";
-            var resp = await cliente.PutAsJsonAsync(ruta, archivoActual);
+
+            // 🔹 Mismo filtro para evitar enviar campos no mapeados
+            var payload = new
+            {
+                IdUsuario = archivoActual.IdUsuario,
+                Nombre = archivoActual.Nombre,
+                Tipo = archivoActual.Tipo,
+                Ruta = archivoActual.Ruta,
+                Fecha = archivoActual.Fecha
+            };
+
+            var resp = await cliente.PutAsJsonAsync(ruta, payload);
 
             if (resp.IsSuccessStatusCode)
             {
