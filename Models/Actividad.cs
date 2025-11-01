@@ -8,47 +8,49 @@ namespace FrontendBlazorApi.Models
     public class Actividad
     {
         [Key]
-        [JsonPropertyName("Id")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [JsonPropertyName("id")]
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Debe seleccionar un entregable")]
-        [JsonPropertyName("IdEntregable")]
+        [JsonPropertyName("identregable")]
         public int IdEntregable { get; set; }
 
         [Required(ErrorMessage = "Debe ingresar un título para la actividad")]
         [StringLength(255, ErrorMessage = "El título no puede superar los 255 caracteres")]
-        [JsonPropertyName("Titulo")]
+        [JsonPropertyName("titulo")]
         public string Titulo { get; set; } = string.Empty;
 
-        [JsonPropertyName("Descripcion")]
+        [JsonPropertyName("descripcion")]
         public string? Descripcion { get; set; }
 
         [DataType(DataType.Date)]
-        [JsonPropertyName("FechaInicio")]
+        [JsonPropertyName("fechainicio")]
         public DateTime? FechaInicio { get; set; }
 
         [DataType(DataType.Date)]
-        [JsonPropertyName("FechaFinPrevista")]
+        [JsonPropertyName("fechafinprevista")]
         public DateTime? FechaFinPrevista { get; set; }
 
         [DataType(DataType.Date)]
-        [JsonPropertyName("FechaModificacion")]
+        [JsonPropertyName("fechamodificacion")]
         public DateTime? FechaModificacion { get; set; }
 
         [DataType(DataType.Date)]
-        [JsonPropertyName("FechaFinalizacion")]
+        [JsonPropertyName("fechafinalizacion")]
         public DateTime? FechaFinalizacion { get; set; }
 
         [Range(1, 5, ErrorMessage = "La prioridad debe estar entre 1 y 5")]
-        [JsonPropertyName("Prioridad")]
+        [JsonPropertyName("prioridad")]
         public int? Prioridad { get; set; }
 
         [Range(0, 100, ErrorMessage = "El porcentaje de avance debe estar entre 0 y 100")]
-        [JsonPropertyName("PorcentajeAvance")]
+        [JsonPropertyName("porcentajeavance")]
         public int? PorcentajeAvance { get; set; }
 
-        // Relación con Entregable
-        [ForeignKey(nameof(IdEntregable))]
-        public virtual Entregable? Entregable { get; set; }
+        // ====== Propiedad auxiliar para mostrar el entregable asociado ======
+        [NotMapped]
+        [JsonPropertyName("entregableNombre")]
+        public string? EntregableNombre { get; set; }
     }
 }

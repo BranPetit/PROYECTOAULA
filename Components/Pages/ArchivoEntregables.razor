@@ -1,164 +1,178 @@
-@page "/Archivo_Entregables"
+@page "/archivoentregable"
 @using System.Net.Http.Json
-@using System.ComponentModel.DataAnnotations
 @using FrontendBlazorApi.Models
 @inject IHttpClientFactory fabricaHttp
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<PageTitle>Gestión de Archivos - Entregables</PageTitle>
+<PageTitle>Asociar Archivos y Entregables</PageTitle>
 
-<div class="container mt-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
-            <h4 class="mb-0"><i class="bi bi-folder2-open me-2"></i>Gestión de Archivos - Entregables</h4>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-light btn-sm" @onclick="ProbarConexion" title="Probar conexión">
-                    <i class="bi bi-wifi"></i>
-                </button>
-                <button class="btn btn-outline-light btn-sm" @onclick="CargarItems" title="Mostrar todos">
-                    <i class="bi bi-list-ul"></i>
-                </button>
-                <button class="btn btn-outline-light btn-sm" @onclick="LimpiarFormulario" title="Limpiar formulario">
-                    <i class="bi bi-eraser"></i>
-                </button>
-            </div>
-        </div>
+<div class="d-flex align-items-center mb-3">
+    <i class="bi bi-link-45deg fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Asociación de Archivos con Entregables</h3>
+</div>
 
-        <div class="card-body">
-            <!-- Buscadores -->
-            <div class="row mb-3 g-2">
-                <div class="col-md-5">
-                    <InputNumber class="form-control" placeholder="Ingrese ID de Archivo" @bind-Value="idArchivoBusqueda" />
-                </div>
-                <div class="col-md-5">
-                    <InputNumber class="form-control" placeholder="Ingrese ID de Entregable" @bind-Value="idEntregableBusqueda" />
-                </div>
-                <div class="col-md-2 d-grid">
-                    <button class="btn btn-outline-secondary" @onclick="BuscarPorIds">
-                        <i class="bi bi-search"></i> Buscar
-                    </button>
-                </div>
-            </div>
+@if (!string.IsNullOrWhiteSpace(mensaje))
+{
+    <div class="@claseAviso shadow-sm mb-3" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>@mensaje
+    </div>
+}
 
-            <!-- Mensajes -->
-            @if (!string.IsNullOrWhiteSpace(mensaje))
-            {
-                <div class="@claseAviso" role="alert">@mensaje</div>
-            }
-
-            <!-- Formulario -->
-            <EditForm Model="itemActual" OnValidSubmit="GuardarSegunEstado">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Id Archivo *</label>
-                        <InputNumber class="form-control" @bind-Value="itemActual.IdArchivo" />
-                        <ValidationMessage For="@(() => itemActual.IdArchivo)" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Id Entregable *</label>
-                        <InputNumber class="form-control" @bind-Value="itemActual.IdEntregable" />
-                        <ValidationMessage For="@(() => itemActual.IdEntregable)" />
-                    </div>
-                </div>
-
-                <div class="mt-4 d-flex flex-wrap gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> @textoBotonGuardar
-                    </button>
-                    <button type="button" class="btn btn-warning" @onclick="ActualizarItem" disabled="@(!existeItem)">
-                        <i class="bi bi-pencil-square"></i> Actualizar
-                    </button>
-                    <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeItem)">
-                        <i class="bi bi-trash"></i> Eliminar
-                    </button>
-                </div>
-            </EditForm>
-        </div>
+<div class="card border-primary shadow-sm mb-4">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-link-45deg me-2"></i>Formulario de Asociación
     </div>
 
-    <hr class="my-4" />
-
-    <!-- Listado -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-light">
-            <h5 class="mb-0"><i class="bi bi-collection me-2"></i>Registros existentes</h5>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion"><i class="bi bi-wifi"></i></button>
+            <button class="btn btn-outline-primary" @onclick="CargarAsociaciones"><i class="bi bi-list"></i></button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario"><i class="bi bi-eraser"></i></button>
         </div>
 
-        <div class="card-body">
-            @if (cargando)
-            {
-                <p><em>Cargando registros...</em></p>
-            }
-            else if (listaItems.Count == 0)
-            {
-                <p>No hay registros disponibles.</p>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-secondary">
-                            <tr>
-                                <th>Id Archivo</th>
-                                <th>Id Entregable</th>
-                                <th class="text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var i in listaItems)
-                            {
-                                <tr>
-                                    <td>@i.IdArchivo</td>
-                                    <td>@i.IdEntregable</td>
-                                    <td class="text-center">
-                                        <button class="btn btn-sm btn-outline-primary" title="Cargar"
-                                                @onclick="@(() => CargarEnFormulario(i))">
-                                            <i class="bi bi-arrow-up-square"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+        <EditForm Model="asociacionActual" OnValidSubmit="GuardarAsociacion">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Archivo *</label>
+                    <InputSelect class="form-select" @bind-Value="asociacionActual.IdArchivo">
+                        <option value="0">-- Seleccione un archivo --</option>
+                        @foreach (var a in listaArchivos)
+                        {
+                            <option value="@a.Id">@a.Nombre</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => asociacionActual.IdArchivo)" />
                 </div>
-            }
-        </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Entregable *</label>
+                    <InputSelect class="form-select" @bind-Value="asociacionActual.IdEntregable">
+                        <option value="0">-- Seleccione un entregable --</option>
+                        @foreach (var e in listaEntregables)
+                        {
+                            <option value="@e.Id">@e.Titulo</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => asociacionActual.IdEntregable)" />
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i></button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeAsociacion)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+<div class="card border-primary shadow-sm">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-table me-2"></i>Asociaciones Registradas
+    </div>
+
+    <div class="card-body">
+        @if (cargando)
+        {
+            <p><em><i class="bi bi-arrow-repeat"></i> Cargando asociaciones...</em></p>
+        }
+        else if (listaAsociaciones.Count == 0)
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>No hay asociaciones registradas.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Archivo</th>
+                            <th>Entregable</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in listaAsociaciones)
+                        {
+                            <tr>
+                                <td>@a.ArchivoNombre</td>
+                                <td>@a.EntregableTitulo</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(a))">
+                                        <i class="bi bi-upload"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 </div>
 
 @code {
-    private List<Archivo_Entregable> listaItems = new();
-    private Archivo_Entregable itemActual { get; set; } = new();
+    private List<Archivo_Entregable> listaAsociaciones = new();
+    private List<Archivo> listaArchivos = new();
+    private List<Entregable> listaEntregables = new();
 
-    private int idArchivoBusqueda { get; set; }
-    private int idEntregableBusqueda { get; set; }
-    private bool existeItem = false;
-    private string textoBotonGuardar = "Crear";
+    private Archivo_Entregable asociacionActual = new();
+    private bool existeAsociacion = false;
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
-
-    private const string urlBaseApi = "api/Archivo_Entregable";
+    private const string urlBaseApi = "api/archivo_entregable";
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarItems();
+        await CargarArchivos();
+        await CargarEntregables();
+        await CargarAsociaciones();
     }
 
-    private async Task CargarItems()
+    private async Task CargarArchivos()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
+            listaArchivos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Archivo>>>("api/archivo"))?.Datos ?? new();
+        }
+        catch { }
+    }
+
+    private async Task CargarEntregables()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
+            listaEntregables = (await cliente.GetFromJsonAsync<RespuestaApi<List<Entregable>>>("api/entregable"))?.Datos ?? new();
+        }
+        catch { }
+    }
+
+    private async Task CargarAsociaciones()
     {
         try
         {
             cargando = true;
             var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<Archivo_Entregable>>>(urlBaseApi);
-            listaItems = respuesta?.Datos ?? new();
-            mensaje = $"Se cargaron {listaItems.Count} registro(s).";
+            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Archivo_Entregable>>>(urlBaseApi);
+            listaAsociaciones = resp?.Datos ?? new();
+
+            foreach (var a in listaAsociaciones)
+            {
+                a.ArchivoNombre = listaArchivos.FirstOrDefault(x => x.Id == a.IdArchivo)?.Nombre ?? $"#{a.IdArchivo}";
+                a.EntregableTitulo = listaEntregables.FirstOrDefault(x => x.Id == a.IdEntregable)?.Titulo ?? $"#{a.IdEntregable}";
+            }
+
+            mensaje = $"Se cargaron {listaAsociaciones.Count} asociación(es).";
             claseAviso = "alert alert-success";
         }
         catch (Exception ex)
@@ -169,69 +183,31 @@
         finally { cargando = false; }
     }
 
-    private async Task BuscarPorIds()
+    private async Task GuardarAsociacion()
     {
-        if (idArchivoBusqueda == 0 || idEntregableBusqueda == 0)
-        {
-            mensaje = "Debe indicar ambos IDs válidos.";
-            claseAviso = "alert alert-warning";
-            return;
-        }
-
         try
         {
             var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            var ruta = $"{urlBaseApi}/id/{idArchivoBusqueda}/{idEntregableBusqueda}";
-            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<Archivo_Entregable>>(ruta);
 
-            if (respuesta?.Datos is null)
+            // Construir payload que NO incluya propiedades [NotMapped]
+            var payload = new
             {
-                mensaje = $"No se encontró un registro con Archivo {idArchivoBusqueda} y Entregable {idEntregableBusqueda}.";
-                claseAviso = "alert alert-warning";
-                existeItem = false;
-                textoBotonGuardar = "Crear";
-                itemActual = new Archivo_Entregable();
-                return;
-            }
+                idarchivo = asociacionActual.IdArchivo,
+                identregable = asociacionActual.IdEntregable
+            };
 
-            itemActual = respuesta.Datos;
-            existeItem = true;
-            textoBotonGuardar = "Actualizar";
-            mensaje = "Registro cargado.";
-            claseAviso = "alert alert-success";
-        }
-        catch (Exception ex)
-        {
-            mensaje = $"Error al buscar: {ex.Message}";
-            claseAviso = "alert alert-danger";
-        }
-    }
-
-    private async Task GuardarSegunEstado()
-    {
-        if (existeItem)
-            await ActualizarItem();
-        else
-            await CrearItem();
-    }
-
-    private async Task CrearItem()
-    {
-        try
-        {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, itemActual);
+            var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
 
             if (resp.IsSuccessStatusCode)
             {
-                mensaje = "Registro creado correctamente.";
+                mensaje = "Asociación creada correctamente.";
                 claseAviso = "alert alert-success";
-                await CargarItems();
+                await CargarAsociaciones();
                 LimpiarFormulario();
             }
             else
             {
-                mensaje = $"No se pudo crear. Detalle: {await resp.Content.ReadAsStringAsync()}";
+                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
                 claseAviso = "alert alert-danger";
             }
         }
@@ -242,23 +218,30 @@
         }
     }
 
-    private async Task ActualizarItem()
+    private async Task ActualizarAsociacionConPayload()
     {
         try
         {
             var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            var ruta = $"{urlBaseApi}/id/{itemActual.IdArchivo}/{itemActual.IdEntregable}";
-            var resp = await cliente.PutAsJsonAsync(ruta, itemActual);
+            var ruta = $"{urlBaseApi}/{asociacionActual.IdArchivo}/{asociacionActual.IdEntregable}";
+
+            var payload = new
+            {
+                idarchivo = asociacionActual.IdArchivo,
+                identregable = asociacionActual.IdEntregable
+            };
+
+            var resp = await cliente.PutAsJsonAsync(ruta, payload);
 
             if (resp.IsSuccessStatusCode)
             {
-                mensaje = "Registro actualizado correctamente.";
+                mensaje = "Asociación actualizada correctamente.";
                 claseAviso = "alert alert-success";
-                await CargarItems();
+                await CargarAsociaciones();
             }
             else
             {
-                mensaje = $"No se pudo actualizar. Detalle: {await resp.Content.ReadAsStringAsync()}";
+                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
                 claseAviso = "alert alert-danger";
             }
         }
@@ -271,37 +254,30 @@
 
     private async Task ConfirmarEliminar()
     {
-        bool confirmado = await JS.InvokeAsync<bool>("confirm",
-            $"¿Seguro que desea eliminar el registro con Archivo {itemActual.IdArchivo} y Entregable {itemActual.IdEntregable}?");
+        if (asociacionActual.IdArchivo == 0 || asociacionActual.IdEntregable == 0) return;
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar esta asociación?");
         if (confirmado)
-            await EliminarItem();
+            await EliminarAsociacion();
     }
 
-    private async Task EliminarItem()
+    private async Task EliminarAsociacion()
     {
-        if (itemActual.IdArchivo == 0 || itemActual.IdEntregable == 0)
-        {
-            mensaje = "Debe indicar IDs válidos.";
-            claseAviso = "alert alert-warning";
-            return;
-        }
-
         try
         {
             var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            var ruta = $"{urlBaseApi}/id/{itemActual.IdArchivo}/{itemActual.IdEntregable}";
+            var ruta = $"{urlBaseApi}/{asociacionActual.IdArchivo}/{asociacionActual.IdEntregable}";
             var resp = await cliente.DeleteAsync(ruta);
 
             if (resp.IsSuccessStatusCode)
             {
-                mensaje = "Registro eliminado.";
+                mensaje = "Asociación eliminada correctamente.";
                 claseAviso = "alert alert-success";
-                await CargarItems();
+                await CargarAsociaciones();
                 LimpiarFormulario();
             }
             else
             {
-                mensaje = $"No se pudo eliminar. Detalle: {await resp.Content.ReadAsStringAsync()}";
+                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
                 claseAviso = "alert alert-danger";
             }
         }
@@ -328,25 +304,22 @@
         }
     }
 
-    private void CargarEnFormulario(Archivo_Entregable i)
+    private void CargarEnFormulario(Archivo_Entregable a)
     {
-        itemActual = new Archivo_Entregable
+        asociacionActual = new Archivo_Entregable
         {
-            IdArchivo = i.IdArchivo,
-            IdEntregable = i.IdEntregable
+            IdArchivo = a.IdArchivo,
+            IdEntregable = a.IdEntregable
         };
-        existeItem = true;
-        textoBotonGuardar = "Actualizar";
-        mensaje = "Registro cargado desde listado.";
+        existeAsociacion = true;
+        mensaje = "Asociación cargada.";
         claseAviso = "alert alert-info";
     }
 
     private void LimpiarFormulario()
     {
-        itemActual = new Archivo_Entregable();
-        existeItem = false;
-        textoBotonGuardar = "Crear";
+        asociacionActual = new Archivo_Entregable();
+        existeAsociacion = false;
         mensaje = "";
-        claseAviso = "alert alert-info";
     }
 }
