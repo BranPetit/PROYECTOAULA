@@ -1,0 +1,334 @@
+@page "/responsable-entregable"
+@using System.Net.Http.Json
+@using FrontendBlazorApi.Models
+@inject IHttpClientFactory fabricaHttp
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Gestión de Responsable–Entregable</PageTitle>
+
+<!-- ENCABEZADO -->
+<div class="d-flex align-items-center mb-3">
+    <i class="bi bi-person-check fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión de Responsable–Entregable</h3>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(mensaje))
+{
+    <div class="@claseAviso shadow-sm mb-3" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>@mensaje
+    </div>
+}
+
+<!-- FORMULARIO -->
+<div class="card border-primary shadow-sm mb-4">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-pencil-square me-2"></i>Formulario de Asociación
+    </div>
+
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion"><i class="bi bi-wifi"></i></button>
+            <button class="btn btn-outline-primary" @onclick="CargarAsociaciones"><i class="bi bi-list"></i></button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario"><i class="bi bi-eraser"></i></button>
+        </div>
+
+        <EditForm Model="asociacionActual" OnValidSubmit="GuardarSegunEstado">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Responsable *</label>
+                    <InputSelect class="form-select" @bind-Value="asociacionActual.IdResponsable">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var r in listaResponsables)
+                        {
+                            <option value="@r.Id">@r.Nombre</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => asociacionActual.IdResponsable)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Entregable *</label>
+                    <InputSelect class="form-select" @bind-Value="asociacionActual.IdEntregable">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var e in listaEntregables)
+                        {
+                            <option value="@e.Id">@e.Titulo</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => asociacionActual.IdEntregable)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Fecha de Asociación</label>
+                    <InputDate class="form-control" @bind-Value="asociacionActual.FechaAsociacion" />
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-success"><i class="bi bi-plus-circle"></i></button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeAsociacion)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+<!-- LISTADO -->
+<div class="card border-primary shadow-sm">
+    <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>Lista de Asociaciones Responsable–Entregable</span>
+        <div class="input-group w-50">
+            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" placeholder="Buscar por responsable o entregable..." @bind="textoBusqueda" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="card-body">
+        @if (cargando)
+        {
+            <p><em><i class="bi bi-arrow-repeat"></i> Cargando asociaciones...</em></p>
+        }
+        else if (listaFiltrada.Count == 0)
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>No se encontraron asociaciones que coincidan.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Responsable</th>
+                            <th>Entregable</th>
+                            <th>Fecha Asociación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in listaFiltrada)
+                        {
+                            <tr>
+                                <td>@GetResponsableNombre(a.IdResponsable)</td>
+                                <td>@GetEntregableTitulo(a.IdEntregable)</td>
+                                <td>@a.FechaAsociacion?.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(a))">
+                                        <i class="bi bi-upload"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Responsable_Entregable> listaAsociaciones = new();
+    private List<Responsable_Entregable> listaFiltrada = new();
+    private List<Responsable> listaResponsables = new();
+    private List<Entregable> listaEntregables = new();
+    private Responsable_Entregable asociacionActual = new();
+    private bool existeAsociacion = false;
+    private string mensaje = "";
+    private string claseAviso = "alert alert-info";
+    private bool cargando = false;
+    private string textoBusqueda = "";
+    private const string urlBaseApi = "api/Responsable_Entregable";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarResponsables();
+        await CargarEntregables();
+        await CargarAsociaciones();
+    }
+
+    private async Task CargarResponsables()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
+            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Responsable>>>("api/responsable");
+            listaResponsables = resp?.Datos ?? new();
+        }
+        catch { listaResponsables = new(); }
+    }
+
+    private async Task CargarEntregables()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
+            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Entregable>>>("api/entregable");
+            listaEntregables = resp?.Datos ?? new();
+        }
+        catch { listaEntregables = new(); }
+    }
+
+    private async Task CargarAsociaciones()
+    {
+        try
+        {
+            cargando = true;
+            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
+            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Responsable_Entregable>>>(urlBaseApi);
+            listaAsociaciones = resp?.Datos ?? new();
+            FiltrarAsociaciones();
+            mensaje = $"Se cargaron {listaAsociaciones.Count} asociación(es).";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al listar asociaciones: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+        finally { cargando = false; }
+    }
+
+    private void FiltrarAsociaciones()
+    {
+        if (string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            listaFiltrada = listaAsociaciones;
+        }
+        else
+        {
+            var busqueda = textoBusqueda.ToLower();
+            listaFiltrada = listaAsociaciones
+                .Where(a =>
+                    GetResponsableNombre(a.IdResponsable).ToLower().Contains(busqueda) ||
+                    GetEntregableTitulo(a.IdEntregable).ToLower().Contains(busqueda))
+                .ToList();
+        }
+    }
+
+    private async Task GuardarSegunEstado()
+    {
+        if (existeAsociacion)
+            mensaje = "Esta asociación ya existe.";
+        else
+            await CrearAsociacion();
+    }
+
+    private async Task CrearAsociacion()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
+            var resp = await cliente.PostAsJsonAsync(urlBaseApi, asociacionActual);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Asociación creada correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarAsociaciones();
+                LimpiarFormulario();
+            }
+            else
+            {
+                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al crear: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        if (asociacionActual.IdResponsable == 0 || asociacionActual.IdEntregable == 0) return;
+        bool confirmado = await JS.InvokeAsync<bool>("confirm",
+            $"¿Seguro que desea eliminar la asociación Responsable #{asociacionActual.IdResponsable} - Entregable #{asociacionActual.IdEntregable}?");
+        if (confirmado)
+            await EliminarAsociacion();
+    }
+
+    private async Task EliminarAsociacion()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
+            var ruta = $"{urlBaseApi}/{asociacionActual.IdResponsable}/{asociacionActual.IdEntregable}";
+            var resp = await cliente.DeleteAsync(ruta);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Asociación eliminada correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarAsociaciones();
+                LimpiarFormulario();
+            }
+            else
+            {
+                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al eliminar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ProbarConexion()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
+            var resp = await cliente.GetAsync(urlBaseApi);
+            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
+            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error de conexión: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private void CargarEnFormulario(Responsable_Entregable a)
+    {
+        asociacionActual = new Responsable_Entregable
+        {
+            IdResponsable = a.IdResponsable,
+            IdEntregable = a.IdEntregable,
+            FechaAsociacion = a.FechaAsociacion
+        };
+        existeAsociacion = true;
+        mensaje = "Asociación cargada.";
+        claseAviso = "alert alert-info";
+    }
+
+    private void LimpiarFormulario()
+    {
+        asociacionActual = new Responsable_Entregable();
+        existeAsociacion = false;
+        mensaje = "";
+    }
+
+    private string GetResponsableNombre(int id) => listaResponsables.FirstOrDefault(x => x.Id == id)?.Nombre ?? $"#{id}";
+    private string GetEntregableTitulo(int id) => listaEntregables.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
+    
+    private string TextoBusqueda
+    {
+        get => textoBusqueda;
+        set
+        {
+            textoBusqueda = value;
+            FiltrarAsociaciones();
+        }
+    }
+}
