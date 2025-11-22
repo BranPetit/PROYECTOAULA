@@ -1,0 +1,94 @@
+@page "/login"
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager Nav
+
+<link href="css/Login.css" rel="stylesheet" />
+
+<div class="login-container">
+    <div class="login-card">
+        <h2>Iniciar Sesión</h2>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert-error">@ErrorMessage</div>
+        }
+
+        <div class="input-group">
+            <label>Email</label>
+            <input @bind="Email" type="email" placeholder="correo@ejemplo.com" />
+        </div>
+
+        <div class="input-group">
+            <label>Contraseña</label>
+            <input @bind="Password" type="password" placeholder="********" />
+        </div>
+
+        <button type="button" class="btn-login" @onclick="IniciarSesion">Ingresar</button>
+    </div>
+</div>
+
+@code {
+    private string Email = "";
+    private string Password = "";
+    private string ErrorMessage = "";
+
+    public class UsuarioLoginDTO
+    {
+        public string Email { get; set; } = "";
+        public string Contrasena { get; set; } = "";
+        public string RutaAvatar { get; set; } = "";
+        public bool Activo { get; set; }
+    }
+
+    private async Task IniciarSesion()
+    {
+        ErrorMessage = "";
+
+        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+        {
+            ErrorMessage = "Debe ingresar usuario y contraseña.";
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var client = ClientFactory.CreateClient("ApiUsuario");
+
+            // Envío seguro por POST
+            var loginData = new { Email, Contrasena = Password };
+            var response = await client.PostAsJsonAsync("usuario/login", loginData);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = $"Usuario o contraseña incorrectos. Status: {response.StatusCode}";
+                StateHasChanged();
+                return;
+            }
+
+            var usuario = await response.Content.ReadFromJsonAsync<UsuarioLoginDTO>();
+
+            if (usuario == null)
+            {
+                ErrorMessage = "Credenciales inválidas.";
+                StateHasChanged();
+                return;
+            }
+
+            if (!usuario.Activo)
+            {
+                ErrorMessage = "El usuario está INACTIVO. Consulte al administrador.";
+                StateHasChanged();
+                return;
+            }
+
+            // Redirige al inicio
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error de conexión: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+}
