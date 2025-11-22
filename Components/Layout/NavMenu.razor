@@ -1,200 +1,25 @@
-﻿@* 
-    NavMenu.razor
-    Este componente define el menú lateral de navegación de la aplicación.
-    Aquí se colocan los enlaces a las distintas páginas (componentes .razor).
-    Por defecto la plantilla incluye: Home, Counter y Weather.
-    Se ha eliminado Weather porque era un ejemplo de la plantilla.
-    Más adelante aquí se agregará el acceso a la página de Productos.
-*@
+@using Microsoft.AspNetCore.Components
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Sistema Gestion Proyectos</a>
-        <button title="Toggle navigation" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+<div class="sidebar @(MenuOpen ? "active" : "")">
+    <h2>Gestión</h2>
+    <span>Navegación</span>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        @* Enlace a la página Home (Index) *@
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-             
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="usuarios">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Usuarios
-            </NavLink>
-        </div>
+    <NavLink href="" class="item" activeClass="active">🏠 Home</NavLink>
+    <NavLink href="usuarios" class="item" activeClass="active">👥 Usuarios</NavLink>
+    <NavLink href="tipoproductos" class="item" activeClass="active">📦 Tipo Productos</NavLink>
+    <NavLink href="tipoproyectos" class="item" activeClass="active">📁 Tipo Proyectos</NavLink>
+    <NavLink href="tiporesponsables" class="item" activeClass="active">👤 Tipo Responsables</NavLink>
+    <NavLink href="estados" class="item" activeClass="active">📌 Estados</NavLink>
+    <NavLink href="variableestrategicas" class="item" activeClass="active">🎯 Variables Estratégicas</NavLink>
+    <NavLink href="transformacionesinstitucionales" class="item" activeClass="active">🏛 Transformaciones</NavLink>
+    <NavLink href="entregables" class="item" activeClass="active">📦 Entregables</NavLink>
+    <NavLink href="responsables" class="item" activeClass="active">🧑‍💼 Responsables</NavLink>
+    <NavLink href="proyectos" class="item" activeClass="active">📊 Proyectos</NavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="tipoproductos">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo Productos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="tipoproyectos">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo Proyectos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="tiporesponsables">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo Responsables
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="estados">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Estados
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="variableestrategicas">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Variables Estrategicas
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="transformacionesinstitucionales">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Transformaciones Institucionales
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="entregables">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Entregables
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="responsables">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Responsables
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="proyectos">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Proyectos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="presupuestos">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Presupuestos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="productos">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Productos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="objetivos-estrategicos">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Objetivos Estrategicos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="metas-estrategicas">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Metas Estrategicas
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="distribucion-presupuesto">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Distribucion de Presupuestos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="ejecucion-presupuesto">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Ejecucion de Presupuestos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="meta-proyecto">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Metas de Proyectos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="producto-entregable">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Productos Entregables
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="responsable-entregable">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Responsables de Entregables
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="proyecto-producto">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Proyectos y Productos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="actividades">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Actividades
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="archivoentregable">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Archivo y Entregables
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="archivos">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Archivos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="estado-proyecto">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Estado de Proyectos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="proyectos-transformacion">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Proyectos Transformacion
-            </NavLink>
-        </div>
-
-    </nav>
+    <a href="/logout" class="logout">Salir</a>
 </div>
 
 @code {
-    private bool colapsado = true;
-
-    /*
-        Propiedad que define la clase CSS aplicada al contenedor del menú.
-
-        Se usa un operador ternario:
-        - Si colapsado == true → retorna "collapse"
-        - Si colapsado == false → retorna null (sin clase)
-
-        Nota: Se declara como string? porque puede devolver un valor nulo.
-        Esto evita el warning CS8603 ("possible null reference return").
-    */
-    private string? NavMenuCssClass => colapsado ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        colapsado = !colapsado;
-    }
+    [Parameter]
+    public bool MenuOpen { get; set; }
 }

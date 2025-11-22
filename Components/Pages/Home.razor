@@ -5,62 +5,93 @@
 
 <PageTitle>Sistema de Gestión de Proyectos</PageTitle>
 
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .dashboard-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 18px;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    .card-header-custom {
+        height: 130px;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .btn-custom {
+        transition: 0.3s ease;
+        border-radius: 25px !important;
+    }
+
+    .btn-custom:hover {
+        transform: scale(1.07);
+    }
+</style>
+
 <div class="container mt-5">
-    <h1 class="text-center mb-4">📊 Sistema de Gestión de Proyectos</h1>
-    <p class="text-center text-muted mb-5">Bienvenido al panel principal. Aquí puedes gestionar proyectos, entregables y responsables.</p>
+    <h1 class="text-center mb-2 fw-bold" style="font-size: 2.8rem;">📊 Sistema de Gestión de Proyectos</h1>
+    <p class="text-center text-muted mb-5" style="font-size: 1.2rem;">Administra fácilmente proyectos, entregables, responsables y variables estratégicas.</p>
 
     <div class="row g-4">
-        <!-- Card Proyectos -->
-        <!-- Card Proyectos -->
+
+        <!-- Proyectos -->
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100 text-center">
-                <div class="card-body">
-                    <h2 class="card-title text-primary">📁 Proyectos</h2>
-                    <p class="card-text text-muted">Administra proyectos estratégicos y su avance.</p>
-                    <NavLink class="btn btn-outline-primary" href="/tipoproyectos">
-                        Ver Proyectos
-                    </NavLink>
+            <div class="card dashboard-card border-0 shadow">
+                <div class="card-header-custom" style="background-image: url('/imagenes/proyectos.jpg');"></div>
+                <div class="card-body text-center">
+                    <h3 class="text-primary fw-bold">📁 Proyectos</h3>
+                    <p class="text-muted">Administra proyectos estratégicos y su avance.</p>
+                    <NavLink class="btn btn-outline-primary btn-custom px-4" href="/tipoproyectos">Ver Proyectos</NavLink>
                 </div>
             </div>
         </div>
 
-        <!-- Card Entregables -->
+        <!-- Entregables -->
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100 text-center">
-                <div class="card-body">
-                    <h2 class="card-title text-success">📦 Entregables</h2>
-                    <p class="card-text text-muted">Consulta y gestiona los entregables del sistema.</p>
-                    <NavLink class="btn btn-outline-success" href="/entregables">
-                        Ver Entregables
-                    </NavLink>
+            <div class="card dashboard-card border-0 shadow">
+                <div class="card-header-custom" style="background-image: url('/imagenes/entregables.png');"></div>
+                <div class="card-body text-center">
+                    <h3 class="text-success fw-bold">📦 Entregables</h3>
+                    <p class="text-muted">Gestiona todos los entregables del sistema.</p>
+                    <NavLink class="btn btn-outline-success btn-custom px-4" href="/entregables">Ver Entregables</NavLink>
                 </div>
             </div>
         </div>
 
-        <!-- Card Responsables -->
+        <!-- Responsables -->
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100 text-center">
-                <div class="card-body">
-                    <h2 class="card-title text-warning">👤 Responsables</h2>
-                    <p class="card-text text-muted">Controla los responsables de cada proyecto y entregable.</p>
-                    <NavLink class="btn btn-outline-warning" href="/tiporesponsables">
-                        Ver Responsables
-                    </NavLink>
+            <div class="card dashboard-card border-0 shadow">
+                <div class="card-header-custom" style="background-image: url('/imagenes/responsables.jpg');"></div>
+                <div class="card-body text-center">
+                    <h3 class="text-warning fw-bold">👤 Responsables</h3>
+                    <p class="text-muted">Controla  los responsables y las asignaciones.                     </p>
+                    <NavLink class="btn btn-outline-warning btn-custom px-4" href="/tiporesponsables">Ver Responsables</NavLink>
                 </div>
             </div>
         </div>
 
-        <!-- Card Variables Estratégicas -->
+        <!-- Variables Estratégicas -->
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 h-100 text-center">
-                <div class="card-body">
-                    <h2 class="card-title text-danger">🎯 Variables</h2>
-                    <p class="card-text text-muted">Monitorea las variables estratégicas del sistema.</p>
-                    <NavLink class="btn btn-outline-danger" href="/variableestrategicas">
-                        Ver Variables
-                    </NavLink>
+            <div class="card dashboard-card border-0 shadow">
+                <div class="card-header-custom" style="background-image: url('/imagenes/variables.webp');"></div>
+                <div class="card-body text-center">
+                    <h3 class="text-danger fw-bold">🎯 Variables</h3>
+                    <p class="text-muted">Monitorea las variables estratégicas.                   </p>
+                    <NavLink class="btn btn-outline-danger btn-custom px-4" href="/variableestrategicas">Ver Variables</NavLink>
                 </div>
             </div>
         </div>
+
     </div>
 </div>

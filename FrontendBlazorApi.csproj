@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <Reference Include="webapicsharp">
-      <HintPath>..\..\webapicsharp (5)\webapicsharp (5)\webapicsharp (5)\webapicsharp\bin\Debug\net8.0\webapicsharp.dll</HintPath>
+      <HintPath>..\..\webapicsharp (71)\webapicsharp\bin\Debug\net8.0\webapicsharp.dll</HintPath>
     </Reference>
   </ItemGroup>
 
