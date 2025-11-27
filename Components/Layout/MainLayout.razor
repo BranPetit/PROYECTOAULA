@@ -1,27 +1,32 @@
 ﻿@inherits LayoutComponentBase
 
-<link href="css/MainLayout.css" rel="stylesheet" />
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
 
-<div class="topbar">
-    <img src="/imagenes/hamburgesa.png" class="menu-icon" @onclick="ToggleMenu" />
-    <a href="/">
-        <img src="/imagenes/casa.png" class="home-icon" />
-    </a>
-    <h3 class="sistem">Sistema Gestión de Proyectos</h3>
+    <main>
+       
+        <div class="top-row px-4">
+
+           
+            <a href="/home">
+                <img src="imagenes/casa.png" style="width: 32px; cursor: pointer;" />
+            </a>
+            <a href="/Calendario">
+                <img src="imagenes/casa.png" style="width: 32px; cursor: pointer;" />
+            </a>
+            <a href="/logs_sistema">
+                <img src="imagenes/casa.png" style="width: 32px; cursor: pointer;" />
+            </a>
+
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+
+    </main>
 </div>
 
-<!-- Insertamos el componente NavMenu -->
-<NavMenu MenuOpen="menuOpen" />
 
-<div class="main-content">
-    @Body
-</div>
-
-@code {
-    private bool menuOpen = false;
-
-    void ToggleMenu()
-    {
-        menuOpen = !menuOpen;
-    }
-}

@@ -1,0 +1,101 @@
+﻿@page "/logs_sistema"
+@using System.Net.Http.Json
+@inject IHttpClientFactory fabricaHttp
+
+<h3 class="mb-3">Historial de Logs del Sistema</h3>
+
+<div class="card border-primary shadow-sm">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-table me-2"></i>Lista de Logs
+    </div>
+
+    <div class="card-body">
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="alert alert-danger">@error</div>
+        }
+        else if (logss == null)
+        {
+            <p><em><i class="bi bi-arrow-repeat"></i> Cargando logs...</em></p>
+        }
+        else if (logss.Count == 0)
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>No existen registros en el log.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Entidad</th>
+                            <th>Acción</th>
+                            <th>ID Registro</th>
+                            <th>Usuario</th>
+                            <th>IP</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in logss)
+                        {
+                            <tr>
+                                <td>@l.Id</td>
+                                <td>@l.Entidad</td>
+                                <td>@l.Accion</td>
+                                <td>@l.IdRegistro</td>
+                                <td>@l.IdUsuario</td>
+                                <td>@l.IpRegistro</td>
+                                <td>@l.FechaRegistro.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string? error;
+    private List<LogSistema>? logss;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiLogSistema");
+
+            // ✅ Aquí usa BaseAddress + ruta relativa correcta
+            ;
+            var data = await cliente.GetFromJsonAsync<RespuestaApi<List<LogSistema>>>("api/ApiLogSistema");
+
+            logss = data?.Datos ?? new();
+        }
+        catch (Exception ex)
+        {
+            error = "Error al cargar logs: " + ex.Message;
+        }
+    }
+
+    public class LogSistema
+    {
+        public int Id { get; set; }
+        public string Entidad { get; set; } = "";
+        public string Accion { get; set; } = "";
+        public int IdRegistro { get; set; }
+        public int IdUsuario { get; set; }
+        public string IpRegistro { get; set; } = "";
+        public DateTime FechaRegistro { get; set; }
+    }
+
+    public class RespuestaApi<T>
+    {
+        public bool Exito { get; set; }
+        public T? Datos { get; set; }
+        public string? Mensaje { get; set; }
+    }
+}

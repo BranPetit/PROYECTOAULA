@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // -------------------------------
 // Registro de servicios en el contenedor de dependencias
-// -------------------------------
+// -------------------------------z
 
 // Se registran los servicios de Razor Components.
 // "AddInteractiveServerComponents" habilita el modo interactivo tipo Blazor Server (SignalR).
@@ -19,8 +19,18 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 
- // Servicio HttpClient para consumir la API externa de productos.
-    // Se configura con la URL base de la API.  
+// Servicio HttpClient para consumir la API externa de productos.
+// Se configura con la URL base de la API.  
+
+builder.Services.AddHttpClient("ApiProyecto", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+builder.Services.AddHttpClient("ApiLogSistema", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5031/");
+});
+
 
 builder.Services.AddHttpClient("ApiUsuario", cliente =>
 {
@@ -67,10 +77,7 @@ builder.Services.AddHttpClient("ApiResponsable", cliente =>
     cliente.BaseAddress = new Uri("http://localhost:5031/");
 });
 
-builder.Services.AddHttpClient("ApiProyecto", cliente =>
-{
-    cliente.BaseAddress = new Uri("http://localhost:5031/");
-});
+
 
 builder.Services.AddHttpClient("ApiPresupuesto", cliente =>
 {
