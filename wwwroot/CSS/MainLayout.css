@@ -1,0 +1,66 @@
+/* --- GENERAL --- */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* --- TOPBAR --- */
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: #0b3d91;
+    color: white;
+    display: flex;
+    align-items: center;
+    /* ESTE ES EL QUE ORGANIZA TODO */
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+}
+
+/* --- ZONA IZQUIERDA --- */
+.top-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.menu-icon {
+    width: 40px;
+    cursor: pointer;
+    filter: brightness(0) invert(1);
+}
+
+.home-icon {
+    width: 45px;
+    cursor: pointer;
+}
+
+/* --- ZONA CENTRO --- */
+.top-center {
+    flex: 1; /* OCUPA TODO EL ESPACIO CENTRAL */
+    text-align: center;
+}
+
+    .top-center h3 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+/* --- ZONA DERECHA (UserBar) --- */
+.top-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 250px; /* evita que se atropelle la izquierda */
+}
+
+/* --- MAIN CONTENT --- */
+.main-content {
+    margin-top: 100px;
+    padding: 20px;
+}

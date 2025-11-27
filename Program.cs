@@ -147,6 +147,21 @@ builder.Services.AddHttpClient("ApiArchivo", cliente =>
     cliente.BaseAddress = new Uri("http://localhost:5031/");
 });
 
+builder.Services.AddHttpClient("ApiRol", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
+builder.Services.AddHttpClient("ApiRutaRol", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
+builder.Services.AddHttpClient("ApiRol_Usuario", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
 builder.Services.AddHttpClient("ApiGenerica", cliente =>
 {
     cliente.BaseAddress = new Uri("http://localhost:5031/");

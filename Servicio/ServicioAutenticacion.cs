@@ -165,6 +165,7 @@ public class ServicioAutenticacion
     public async Task<List<RutaRol>> ObtenerRutasRolAsync()
     {
         // Si ya están en memoria, devolverlas
+        Console.WriteLine("📌 DEBUG - RUTAS EN MEMORIA:");
         if (_rutasRolEnMemoria != null)
             return _rutasRolEnMemoria;
 
@@ -193,7 +194,8 @@ public class ServicioAutenticacion
     public async Task<bool> TienePermisoParaRutaAsync(string ruta)
     {
         try
-        {
+        {   
+            ruta = ruta.Trim('/').ToLower();
             // Obtener rutas permitidas
             var rutasRol = await ObtenerRutasRolAsync();
 

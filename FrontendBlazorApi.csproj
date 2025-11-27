@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\CSS\MainLayout.css" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
 
@@ -14,6 +18,10 @@
     <Reference Include="webapicsharp">
       <HintPath>..\..\webapicsharp (71)\webapicsharp\bin\Debug\net8.0\webapicsharp.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\CSS\MainLayout.css" />
   </ItemGroup>
 
 </Project>

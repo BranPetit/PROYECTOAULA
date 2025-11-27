@@ -321,7 +321,7 @@
                     if (nombresRolesUsuario.Count > 0)
                     {
                         // Obtener TODAS las rutasrol y filtrar por TODOS los roles del usuario
-                        var todasRutasRol = await servicioApi.ObtenerTodosAsync<RutaRol>("Rutarol");
+                        var todasRutasRol = await servicioApi.ObtenerTodosAsync<RutaRol>("RutaRol");
                         var rutasDelUsuario = todasRutasRol?
                             .Where(rr => nombresRolesUsuario.Contains(rr.NombreRol))
                             .Distinct()

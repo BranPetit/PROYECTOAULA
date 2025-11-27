@@ -1,27 +1,25 @@
 @page "/usuarios"
-@using System.Net.Http.Json
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @rendermode InteractiveServer
 
 <PageTitle>Usuarios</PageTitle>
 
 <h3>Gestión de Usuarios</h3>
 
-<!-- Botones globales -->
 <div class="mb-3 d-flex gap-2">
     <button type="button" class="btn btn-outline-secondary" @onclick="ProbarConexion">Probar conexión</button>
     <button type="button" class="btn btn-outline-primary" @onclick="CargarUsuarios">Mostrar todos</button>
     <button type="button" class="btn btn-outline-dark" @onclick="LimpiarFormulario">Limpiar</button>
 </div>
 
-<!-- Mensajes de estado -->
 @if (!string.IsNullOrWhiteSpace(mensaje))
 {
     <div class="@claseAviso" role="alert">@mensaje</div>
 }
 
-<!-- Formulario -->
 <h4>Formulario de Usuario</h4>
 <EditForm Model="usuarioActual" OnValidSubmit="GuardarSegunEstado">
     <DataAnnotationsValidator />
@@ -58,13 +56,14 @@
         <button type="submit" class="btn btn-primary">@textoBotonGuardar</button>
         <button type="button" class="btn btn-warning" @onclick="BuscarPorId">Buscar</button>
         <button type="button" class="btn btn-danger" @onclick="EliminarUsuario"
-            disabled="@(!existeUsuario)">Eliminar</button>
+                disabled="@(!existeUsuario)">
+            Eliminar
+        </button>
     </div>
 </EditForm>
 
 <hr />
 
-<!-- Tabla de usuarios -->
 @if (cargando)
 {
     <p><em>Cargando usuarios...</em></p>
@@ -116,28 +115,28 @@ else
 @code {
     private List<Usuario> listaUsuarios = new();
     private Usuario usuarioActual = new();
-
     private bool existeUsuario = false;
     private string textoBotonGuardar = "Crear";
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
 
-    private const string urlBaseApi = "api/usuario";
-
     protected override async Task OnInitializedAsync()
     {
         await CargarUsuarios();
     }
 
+    // ---------------------------------------------------------
+    // OBTENER TODOS
+    // ---------------------------------------------------------
     private async Task CargarUsuarios()
     {
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiUsuario");
-            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<Usuario>>>(urlBaseApi);
-            listaUsuarios = respuesta?.Datos ?? new();
+
+            listaUsuarios = await servicioApi.ObtenerTodosAsync<Usuario>("usuario");
+
             mensaje = $"Se cargaron {listaUsuarios.Count} usuario(s).";
             claseAviso = "alert alert-success";
         }
@@ -149,6 +148,9 @@ else
         finally { cargando = false; }
     }
 
+    // ---------------------------------------------------------
+    // OBTENER POR ID
+    // ---------------------------------------------------------
     private async Task BuscarPorId()
     {
         if (usuarioActual.Id == 0)
@@ -160,16 +162,15 @@ else
 
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiUsuario");
-            var ruta = $"{urlBaseApi}/id/{usuarioActual.Id}";
-            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<Usuario>>>(ruta);
-            var encontrado = respuesta?.Datos?.FirstOrDefault();
+            var encontrado = await servicioApi.ObtenerPorClaveAsync<Usuario>(
+                "usuario", "id", usuarioActual.Id);
 
-            if (encontrado is not null)
+            if (encontrado != null)
             {
                 usuarioActual = encontrado;
                 existeUsuario = true;
                 textoBotonGuardar = "Actualizar";
+
                 mensaje = "Usuario cargado.";
                 claseAviso = "alert alert-success";
             }
@@ -177,13 +178,14 @@ else
             {
                 existeUsuario = false;
                 textoBotonGuardar = "Crear";
+
                 mensaje = "Usuario no encontrado.";
                 claseAviso = "alert alert-warning";
             }
         }
         catch (Exception ex)
         {
-            mensaje = $"No se pueden Buscar los Usuarios: {ex.Message}";
+            mensaje = $"Error al buscar usuario: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
     }
@@ -196,34 +198,19 @@ else
             await CrearUsuario();
     }
 
+    // ---------------------------------------------------------
+    // CREAR
+    // ---------------------------------------------------------
     private async Task CrearUsuario()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiUsuario");
+            var resp = await servicioApi.CrearAsync("usuario", usuarioActual);
 
-            var nuevoUsuario = new
-            {
-                Email = usuarioActual.Email,
-                Contrasena = usuarioActual.Contrasena,
-                RutaAvatar = usuarioActual.RutaAvatar,
-                Activo = usuarioActual.Activo
-            };
-
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, nuevoUsuario);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Usuario creado correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarUsuarios();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"No se pudo crear. Detalle: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Usuario creado correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarUsuarios();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -232,34 +219,20 @@ else
         }
     }
 
+    // ---------------------------------------------------------
+    // ACTUALIZAR
+    // ---------------------------------------------------------
     private async Task ActualizarUsuario()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiUsuario");
-            var ruta = $"{urlBaseApi}/id/{usuarioActual.Id}";
+            var resp = await servicioApi.ActualizarAsync(
+                "usuario", "id", usuarioActual.Id, usuarioActual);
 
-            var actualizarUsuario = new
-            {
-                Email = usuarioActual.Email,
-                Contrasena = usuarioActual.Contrasena,
-                RutaAvatar = usuarioActual.RutaAvatar,
-                Activo = usuarioActual.Activo
-            };
+            mensaje = "Usuario actualizado correctamente.";
+            claseAviso = "alert alert-success";
 
-            var resp = await cliente.PutAsJsonAsync(ruta, actualizarUsuario);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Usuario actualizado correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarUsuarios();
-            }
-            else
-            {
-                mensaje = $"No se pudo actualizar. Detalle: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            await CargarUsuarios();
         }
         catch (Exception ex)
         {
@@ -268,6 +241,9 @@ else
         }
     }
 
+    // ---------------------------------------------------------
+    // ELIMINAR
+    // ---------------------------------------------------------
     private async Task EliminarUsuario()
     {
         if (usuarioActual.Id == 0)
@@ -279,22 +255,13 @@ else
 
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiUsuario");
-            var ruta = $"{urlBaseApi}/id/{usuarioActual.Id}";
-            var resp = await cliente.DeleteAsync(ruta);
+            await servicioApi.EliminarAsync("usuario", "id", usuarioActual.Id);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Usuario eliminado.";
-                claseAviso = "alert alert-success";
-                await CargarUsuarios();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"No se pudo eliminar. Detalle: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Usuario eliminado.";
+            claseAviso = "alert alert-success";
+
+            await CargarUsuarios();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -307,10 +274,10 @@ else
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiUsuario");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            await servicioApi.ObtenerTodosAsync<Usuario>("usuario");
+
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
@@ -329,6 +296,7 @@ else
             RutaAvatar = u.RutaAvatar,
             Activo = u.Activo
         };
+
         existeUsuario = true;
         textoBotonGuardar = "Actualizar";
         mensaje = "Usuario cargado desde listado.";
