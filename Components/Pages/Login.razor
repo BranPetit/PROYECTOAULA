@@ -1,94 +1,426 @@
-@page "/login"
-@inject IHttpClientFactory ClientFactory
-@inject NavigationManager Nav
+@page "/"
+@rendermode InteractiveServer
+@using FrontendBlazorApi.Servicios
+@inject NavigationManager navegador
+@inject ServicioAutenticacion servicioAuth
+@inject ServicioApiGenerico servicioApi
 
-<link href="css/Login.css" rel="stylesheet" />
+<PageTitle>Inicio de Sesión</PageTitle>
+
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        padding: 20px;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* TARJETA PRINCIPAL */
+    .login-card {
+        background: #FFFFFF;
+        border-radius: 20px;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+        display: flex;
+        max-width: 1050px;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    /* =======================================
+       LADO IZQUIERDO – PANEL CORPORATIVO
+       ======================================= */
+
+    .login-image-section {
+        flex: 1;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        padding: 60px 40px;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+    }
+
+        .login-image-section::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: url('https://www.transparenttextures.com/patterns/asfalt-light.png');
+            opacity: 0.15;
+        }
+
+    .login-image-icon {
+        font-size: 110px;
+        margin-bottom: 25px;
+        opacity: 0.9;
+    }
+
+    .login-image-text h2 {
+        font-size: 2.4rem;
+        font-weight: 700;
+    }
+
+    .login-image-text p {
+        margin-top: 10px;
+        font-size: 1.1rem;
+        opacity: 0.95;
+    }
+
+    .feature-list {
+        margin-top: 25px;
+        font-size: 1.05rem;
+    }
+
+        .feature-list div {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list i {
+            color: #a7e0ff;
+            margin-right: 8px;
+        }
+
+    /* =======================================
+       LADO DERECHO – FORMULARIO
+       ======================================= */
+
+    .login-form-section {
+        flex: 1;
+        padding: 55px 50px;
+    }
+
+    .login-form-title {
+        font-size: 2.1rem;
+        font-weight: 700;
+        color: #1e3c72;
+        margin-bottom: 10px;
+    }
+
+    .login-form-subtitle {
+        color: #666;
+        margin-bottom: 35px;
+    }
+
+    .form-floating-custom {
+        position: relative;
+        margin-bottom: 28px;
+    }
+
+        /* INPUTS */
+        .form-floating-custom .form-control {
+            height: 58px;
+            border-radius: 12px;
+            border: 2px solid #d5d8e0;
+            padding-left: 55px;
+            font-size: 1rem;
+            transition: 0.25s ease;
+        }
+
+            .form-floating-custom .form-control:focus {
+                border-color: #2a5298;
+                box-shadow: 0 0 0 0.18rem rgba(42, 82, 152, 0.25);
+            }
+
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        left: 18px;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        color: #888;
+    }
+
+    /* BOTÓN LOGIN */
+    .btn-login {
+        height: 58px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        border: none;
+        color: white;
+        font-size: 1.15rem;
+        font-weight: 600;
+        transition: 0.25s ease;
+    }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 60, 114, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+    /* ALERTAS */
+    .alert-modern {
+        background: #ffe1e1;
+        border-left: 6px solid #d9534f;
+        color: #b12a2a;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    /* FOOTER */
+    .login-footer {
+        text-align: center;
+        margin-top: 25px;
+        color: #888;
+        font-size: 0.92rem;
+    }
+
+    .login-image-section {
+        text-align: center;
+        padding: 50px 20px;
+    }
+
+    .login-form-section {
+        padding: 40px 30px;
+    }
+
+    }
+</style>
 
 <div class="login-container">
     <div class="login-card">
-        <h2>Iniciar Sesión</h2>
-
-        @if (!string.IsNullOrEmpty(ErrorMessage))
-        {
-            <div class="alert-error">@ErrorMessage</div>
-        }
-
-        <div class="input-group">
-            <label>Email</label>
-            <input @bind="Email" type="email" placeholder="correo@ejemplo.com" />
+        <!-- Sección de imagen/ilustración izquierda -->
+        <div class="login-image-section">
+            <div class="login-image-icon">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <div class="login-image-text text-center">
+                <h2>Bienvenido de nuevo</h2>
+                <p>Sistema de Gestión Empresarial</p>
+                <p class="mt-4">
+                    <i class="bi bi-check-circle me-2"></i>Gestión de Facturas<br>
+                    <i class="bi bi-check-circle me-2"></i>Control de Inventario<br>
+                    <i class="bi bi-check-circle me-2"></i>Administración de Clientes
+                </p>
+            </div>
         </div>
 
-        <div class="input-group">
-            <label>Contraseña</label>
-            <input @bind="Password" type="password" placeholder="********" />
-        </div>
+        <!-- Sección de formulario derecha -->
+        <div class="login-form-section">
+            <div class="login-form-title">Iniciar Sesión</div>
+            <div class="login-form-subtitle">Ingrese sus credenciales para continuar</div>
 
-        <button type="button" class="btn-login" @onclick="IniciarSesion">Ingresar</button>
+            <!-- Mensajes de alerta -->
+            @if (!string.IsNullOrEmpty(mensaje))
+            {
+                <div class="alert @claseAviso alert-modern" role="alert">
+                    <i class="bi @iconoMensaje me-2"></i>@mensaje
+                </div>
+            }
+
+            <!-- Formulario de login -->
+
+            <EditForm Model="credenciales" OnValidSubmit="IniciarSesion" FormName="FormularioLogin">
+                <DataAnnotationsValidator />
+
+                <!-- Campo de usuario/email -->
+                <div class="form-floating-custom">
+                    <i class="bi bi-person-circle input-icon"></i>
+                    <InputText class="form-control"
+                               @bind-Value="credenciales.Usuario"
+                               placeholder="Correo electrónico"
+                               autocomplete="username" />
+                </div>
+
+                <!-- Campo de contraseña -->
+                <div class="form-floating-custom">
+                    <i class="bi bi-lock-fill input-icon"></i>
+                    <InputText type="password"
+                               class="form-control"
+                               @bind-Value="credenciales.Contrasena"
+                               placeholder="Contraseña"
+                               autocomplete="current-password" />
+                </div>
+
+                <!-- Botón de envío -->
+                <button type="submit" class="btn btn-login w-100" disabled="@cargando">
+                    @if (cargando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Verificando...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                        <span>Iniciar Sesión</span>
+                    }
+                </button>
+            </EditForm>
+
+            <!-- Footer del formulario -->
+            <div class="login-footer">
+                <i class="bi bi-shield-check me-1"></i>
+                Conexión segura y encriptada
+            </div>
+        </div>
     </div>
 </div>
 
 @code {
-    private string Email = "";
-    private string Password = "";
-    private string ErrorMessage = "";
-
-    public class UsuarioLoginDTO
-    {
-        public string Email { get; set; } = "";
-        public string Contrasena { get; set; } = "";
-        public string RutaAvatar { get; set; } = "";
-        public bool Activo { get; set; }
-    }
+    private Credenciales credenciales = new();
+    private string mensaje = "";
+    private string claseAviso = "alert-info";
+    private string iconoMensaje = "bi-info-circle";
+    private bool cargando = false;
 
     private async Task IniciarSesion()
     {
-        ErrorMessage = "";
-
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
-        {
-            ErrorMessage = "Debe ingresar usuario y contraseña.";
-            StateHasChanged();
-            return;
-        }
-
         try
         {
-            var client = ClientFactory.CreateClient("ApiUsuario");
+            cargando = true;
+            MostrarMensaje("Verificando credenciales...", "info");
 
-            // Envío seguro por POST
-            var loginData = new { Email, Contrasena = Password };
-            var response = await client.PostAsJsonAsync("usuario/login", loginData);
-
-            if (!response.IsSuccessStatusCode)
+            // 1. Obtener token usando ServicioApiGenerico
+            var datosToken = new
             {
-                ErrorMessage = $"Usuario o contraseña incorrectos. Status: {response.StatusCode}";
-                StateHasChanged();
+                Tabla = "usuario",
+                CampoUsuario = "email",
+                CampoContrasena = "contrasena",
+                Usuario = credenciales.Usuario,
+                Contrasena = credenciales.Contrasena
+            };
+
+            var resultado = await servicioApi.PostAsync<RespuestaToken>("api/Autenticacion/token", datosToken);
+
+            if (resultado == null || string.IsNullOrEmpty(resultado.Token))
+            {
+                MostrarMensaje("No se recibió un token válido del servidor", "warning");
                 return;
             }
 
-            var usuario = await response.Content.ReadFromJsonAsync<UsuarioLoginDTO>();
+            // 2. Guardar token en ServicioAutenticacion
+            await servicioAuth.IniciarSesionAsync(resultado.Token, credenciales.Usuario);
 
-            if (usuario == null)
+            // 3. Cargar TODAS las rutas de TODOS los roles del usuario que hizo login
+            try
             {
-                ErrorMessage = "Credenciales inválidas.";
-                StateHasChanged();
-                return;
+                // Obtener todos los rol_usuario y filtrar por email
+                var todosRolUsuario = await servicioApi.ObtenerTodosAsync<RolUsuario>("Rol_Usuario");
+                var rolesDelUsuario = todosRolUsuario?.Where(ru => ru.FkEmail == credenciales.Usuario).ToList();
+
+                if (rolesDelUsuario != null && rolesDelUsuario.Count > 0)
+                {
+                    // Obtener todos los roles
+                    var todosRoles = await servicioApi.ObtenerTodosAsync<Rol>("rol");
+
+                    // Obtener nombres de los roles del usuario
+                    var nombresRolesUsuario = rolesDelUsuario
+                        .Select(ru => todosRoles?.FirstOrDefault(r => r.IdRol == ru.FkIdRol)?.Nombre)
+                        .Where(nombre => !string.IsNullOrEmpty(nombre))
+                        .ToList();
+
+                    if (nombresRolesUsuario.Count > 0)
+                    {
+                        // Obtener TODAS las rutasrol y filtrar por TODOS los roles del usuario
+                        var todasRutasRol = await servicioApi.ObtenerTodosAsync<RutaRol>("Rutarol");
+                        var rutasDelUsuario = todasRutasRol?
+                            .Where(rr => nombresRolesUsuario.Contains(rr.NombreRol))
+                            .Distinct()
+                            .ToList();
+
+                        if (rutasDelUsuario != null && rutasDelUsuario.Count > 0)
+                        {
+                            await servicioAuth.GuardarRutasRolAsync(rutasDelUsuario);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Si falla cargar permisos, continuar igual
             }
 
-            if (!usuario.Activo)
-            {
-                ErrorMessage = "El usuario está INACTIVO. Consulte al administrador.";
-                StateHasChanged();
-                return;
-            }
-
-            // Redirige al inicio
-            Nav.NavigateTo("/");
+            MostrarMensaje("¡Inicio de sesión exitoso! Redirigiendo...", "success");
+            await Task.Delay(1500);
+            navegador.NavigateTo("/home", forceLoad: true);
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error de conexión: {ex.Message}";
-            StateHasChanged();
+            MostrarMensaje($"Error: {ex.Message}", "danger");
         }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void MostrarMensaje(string texto, string tipo)
+    {
+        mensaje = texto;
+        claseAviso = tipo switch
+        {
+            "success" => "alert-success",
+            "danger" => "alert-danger",
+            "warning" => "alert-warning",
+            _ => "alert-info"
+        };
+        iconoMensaje = tipo switch
+        {
+            "success" => "bi-check-circle-fill",
+            "danger" => "bi-exclamation-triangle-fill",
+            "warning" => "bi-exclamation-circle-fill",
+            _ => "bi-info-circle-fill"
+        };
+    }
+
+    private class Credenciales
+    {
+        public string Usuario { get; set; } = "";
+        public string Contrasena { get; set; } = "";
+    }
+
+    private class RespuestaToken
+    {
+        public string? Token { get; set; }
+    }
+
+    private class RespuestaConsulta
+    {
+        public List<Dictionary<string, object>>? Resultados { get; set; }
+    }
+
+    private class RolUsuario
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("fkemail")]
+        public string? FkEmail { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("fkidrol")]
+        public int FkIdRol { get; set; }
+    }
+
+    private class Rol
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int IdRol { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("nombre")]
+        public string? Nombre { get; set; }
+    }
+
+    // Métodos auxiliares para extraer valores de Dictionary
+    private int ObtenerInt(Dictionary<string, object> dict, string key)
+    {
+        if (dict.TryGetValue(key, out var valor) && valor != null)
+        {
+            if (valor is int i) return i;
+            if (int.TryParse(valor.ToString(), out var resultado)) return resultado;
+        }
+        return 0;
+    }
+
+    private string ObtenerString(Dictionary<string, object> dict, string key)
+    {
+        if (dict.TryGetValue(key, out var valor) && valor != null)
+            return valor.ToString() ?? "";
+        return "";
     }
 }

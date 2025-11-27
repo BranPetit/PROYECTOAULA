@@ -1,9 +1,33 @@
-﻿@page "/"
+﻿@page "/home"
 
 @using FrontendBlazorApi.Models
+@using FrontendBlazorApi.Servicios
+
 @inject NavigationManager Navigation
+@* @inject ServicioAutenticacion Authservice
+@inject NavigationManager nav
+
+@if (!estaAutenticado)
+{
+    <p>Redirigiendo...</p>
+}
 
 <PageTitle>Sistema de Gestión de Proyectos</PageTitle>
+
+<!-- EL RESTO DEL HTML IGUAL -->
+@code {
+    private bool estaAutenticado = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        estaAutenticado = await Authservice.EstaAutenticadoAsync();
+
+        if (!estaAutenticado)
+        {
+            Navigation.NavigateTo("/login", true);
+        }
+    }
+} *@
 
 <style>
     body {

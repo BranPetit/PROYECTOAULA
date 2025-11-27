@@ -3,6 +3,7 @@
 // Aquí se configuran los servicios y se define cómo se ejecuta la aplicación.
 
 using FrontendBlazorApi.Components;          // Importa el espacio de nombres donde está App.razor
+using FrontendBlazorApi.Servicios;
 using Microsoft.AspNetCore.Components;       // Librerías base de Blazor
 using Microsoft.AspNetCore.Components.Web;   // Funcionalidades adicionales de renderizado
 
@@ -146,6 +147,14 @@ builder.Services.AddHttpClient("ApiArchivo", cliente =>
     cliente.BaseAddress = new Uri("http://localhost:5031/");
 });
 
+builder.Services.AddHttpClient("ApiGenerica", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
+
+builder.Services.AddScoped<FrontendBlazorApi.Servicios.ServicioAutenticacion>();
+
+builder.Services.AddScoped<FrontendBlazorApi.Servicios.ServicioApiGenerico>();
 
 
 /*
