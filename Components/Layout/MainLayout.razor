@@ -1,17 +1,46 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavManager
 
 <link href="css/MainLayout.css" rel="stylesheet" />
 
 <div class="topbar">
-    <img src="/imagenes/hamburgesa.png" class="menu-icon" @onclick="ToggleMenu" />
-    <a href="/">
-        <img src="/imagenes/casa.png" class="home-icon" />
-    </a>
-    <h3 class="sistem">Sistema Gestión de Proyectos</h3>
+
+    @if (!EsLogin)
+    {
+        <!-- ZONA IZQUIERDA -->
+        <div class="top-left">
+            <button class="menu-btn" @onclick="ToggleMenu">
+                <img src="/imagenes/hamburgesa.png" class="menu-icon" />
+            </button>
+
+            <a href="/home">
+                <img src="/imagenes/casa.png" class="home-icon" />
+            </a>
+        </div>
+
+        <!-- ZONA CENTRO -->
+        <div class="top-center">
+            <h3>Sistema Gestión de Proyectos</h3>
+        </div>
+    }
+    else
+    {
+        <!-- Para el login dejamos centro vacío -->
+        <div class="top-left"></div>
+        <div class="top-center"></div>
+    }
+
+    <!-- ZONA DERECHA (Userbar SIEMPRE visible) -->
+    <div class="top-right">
+        <UserBar />
+    </div>
+
 </div>
 
-<!-- Insertamos el componente NavMenu -->
-<NavMenu MenuOpen="menuOpen" />
+@if (!EsLogin)
+{
+    <NavMenu MenuOpen="menuOpen" />
+}
 
 <div class="main-content">
     @Body
@@ -19,6 +48,8 @@
 
 @code {
     private bool menuOpen = false;
+
+    private bool EsLogin => NavManager.Uri.EndsWith("/");
 
     void ToggleMenu()
     {
