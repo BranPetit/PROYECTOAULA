@@ -1,7 +1,9 @@
-@page "/distribucionpresupuestos"
-@using System.Net.Http.Json
+@page "/distribucion-presupuesto"
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
+@using FrontendBlazorApi.Servicios
+@using System.Globalization
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
@@ -176,11 +178,8 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
-            listaPresupuestos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Presupuesto>>>("api/presupuesto"))?.Datos ?? new();
-
-            cliente = fabricaHttp.CreateClient("ApiProyecto");
-            listaProyectos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Proyecto>>>("api/proyecto"))?.Datos ?? new();
+            listaPresupuestos = await servicioApi.ObtenerTodosAsync<Presupuesto>("presupuesto");
+            listaProyectos = await servicioApi.ObtenerTodosAsync<Proyecto>("proyecto");
         }
         catch
         {
@@ -194,9 +193,7 @@
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<DistribucionPresupuesto>>>(urlBaseApi);
-            listaDistribuciones = resp?.Datos ?? new();
+            listaDistribuciones = await servicioApi.ObtenerTodosAsync<DistribucionPresupuesto>("distribucionpresupuesto");
             mensaje = $"Se cargaron {listaDistribuciones.Count} distribución(es).";
             claseAviso = "alert alert-success";
         }
@@ -206,6 +203,40 @@
             claseAviso = "alert alert-danger";
         }
         finally { cargando = false; }
+    }
+
+    private async Task BuscarPorId()
+    {
+        if (idBusqueda == 0)
+        {
+            mensaje = "Debe indicar un ID válido.";
+            claseAviso = "alert alert-warning";
+            return;
+        }
+
+        try
+        {
+            var encontrado = await servicioApi.ObtenerPorClaveAsync<DistribucionPresupuesto>("distribucionpresupuesto", "id", idBusqueda);
+
+            if (encontrado == null)
+            {
+                mensaje = $"No se encontró una distribución con ID {idBusqueda}.";
+                claseAviso = "alert alert-warning";
+                existeDistribucion = false;
+                distribucionActual = new();
+                return;
+            }
+
+            distribucionActual = encontrado;
+            existeDistribucion = true;
+            mensaje = "Distribución cargada.";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al buscar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
     }
 
     private async Task GuardarSegunEstado()
@@ -220,21 +251,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, distribucionActual);
+            await servicioApi.CrearAsync("distribucionpresupuesto", distribucionActual);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Distribución creada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarDistribuciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Distribución creada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarDistribuciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -247,21 +269,11 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
-            var ruta = $"{urlBaseApi}/id/{distribucionActual.Id}";
-            var resp = await cliente.PutAsJsonAsync(ruta, distribucionActual);
+            await servicioApi.ActualizarAsync("distribucionpresupuesto", "id", distribucionActual.Id, distribucionActual);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Distribución actualizada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarDistribuciones();
-            }
-            else
-            {
-                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Distribución actualizada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarDistribuciones();
         }
         catch (Exception ex)
         {
@@ -282,22 +294,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
-            var ruta = $"{urlBaseApi}/id/{id}";
-            var resp = await cliente.DeleteAsync(ruta);
+            await servicioApi.EliminarAsync("distribucionpresupuesto", "id", id);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Distribución eliminada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarDistribuciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Distribución eliminada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarDistribuciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -337,10 +339,9 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            await servicioApi.ObtenerTodosAsync<DistribucionPresupuesto>("distribucionpresupuesto");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
@@ -351,13 +352,17 @@
 
     private async Task BuscarPorId()
     {
-        if (idBusqueda == 0)
-        {
-            mensaje = "Debe indicar un ID válido.";
-            claseAviso = "alert alert-warning";
-            existeDistribucion = false;
-            return;
-        }
+        distribucionActual = new DistribucionPresupuesto
+            {
+                Id = d.Id,
+                IdPresupuestoPadre = d.IdPresupuestoPadre,
+                IdProyectoHijo = d.IdProyectoHijo,
+                MontoAsignado = d.MontoAsignado
+            };
+        existeDistribucion = true;
+        mensaje = "Distribución cargada.";
+        claseAviso = "alert alert-info";
+    }
 
         try
         {

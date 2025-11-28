@@ -1,7 +1,9 @@
-@page "/metaproyectos"
-@using System.Net.Http.Json
+@page "/meta-proyecto"
+@using System.ComponentModel.DataAnnotations
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
@@ -148,7 +150,6 @@
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
-    private const string urlBaseApi = "api/metaproyecto";
 
     protected override async Task OnInitializedAsync()
     {
@@ -160,14 +161,8 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyecto");
-            listaProyectos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Proyecto>>>("api/proyecto"))?.Datos ?? new();
-            listaMetas = (await cliente.GetFromJsonAsync<RespuestaApi<List<MetaEstrategica>>>("api/metaestrategica"))?.Datos ?? new();
-        }
-        catch
-        {
-            listaProyectos = new();
-            listaMetas = new();
+            listaMetas = await servicioApi.ObtenerTodosAsync<MetaEstrategica>("metaestrategica");
+            listaProyectos = await servicioApi.ObtenerTodosAsync<Proyecto>("proyecto");
         }
     }
 
@@ -176,9 +171,14 @@
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiProyecto");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<MetaProyecto>>>(urlBaseApi);
-            listaAsociaciones = resp?.Datos ?? new();
+            listaAsociaciones = await servicioApi.ObtenerTodosAsync<MetaProyecto>("meta_proyecto");
+
+            foreach (var a in listaAsociaciones)
+            {
+                a.MetaNombre = GetMetaNombre(a.IdMeta);
+                a.ProyectoNombre = GetProyectoNombre(a.IdProyecto);
+            }
+
             mensaje = $"Se cargaron {listaAsociaciones.Count} asociación(es).";
             claseAviso = "alert alert-success";
         }
@@ -188,6 +188,40 @@
             claseAviso = "alert alert-danger";
         }
         finally { cargando = false; }
+    }
+
+    private async Task BuscarPorId()
+    {
+        if (idBusqueda == 0)
+        {
+            mensaje = "Debe indicar un ID válido.";
+            claseAviso = "alert alert-warning";
+            return;
+        }
+
+        try
+        {
+            var encontrado = await servicioApi.ObtenerPorClaveAsync<MetaProyecto>("meta_proyecto", "id", idBusqueda);
+
+            if (encontrado == null)
+            {
+                mensaje = $"No se encontró una asociación con ID {idBusqueda}.";
+                claseAviso = "alert alert-warning";
+                existeAsociacion = false;
+                asociacionActual = new();
+                return;
+            }
+
+            asociacionActual = encontrado;
+            existeAsociacion = true;
+            mensaje = "Asociación cargada.";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al buscar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
     }
 
     private async Task GuardarSegunEstado()
@@ -202,27 +236,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyecto");
-            var payload = new
-            {
-                IdMeta = asociacionActual.IdMeta,
-                IdProyecto = asociacionActual.IdProyecto,
-                FechaAsociacion = asociacionActual.FechaAsociacion
-            };
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
+            await servicioApi.CrearAsync("meta_proyecto", asociacionActual);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación creada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación creada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -235,22 +254,11 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyecto");
-            var ruta = $"{urlBaseApi}/id/{asociacionActual.IdMeta}/{asociacionActual.IdProyecto}";
-            var payload = new { FechaAsociacion = asociacionActual.FechaAsociacion };
-            var resp = await cliente.PutAsJsonAsync(ruta, payload);
+            await servicioApi.ActualizarAsync("meta_proyecto", "id", asociacionActual.Id, asociacionActual);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación actualizada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-            }
-            else
-            {
-                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación actualizada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
         }
         catch (Exception ex)
         {
@@ -271,22 +279,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyecto");
-            var ruta = $"{urlBaseApi}/id/{idMeta}/{idProyecto}";
-            var resp = await cliente.DeleteAsync(ruta);
+            await servicioApi.EliminarAsync("meta_proyecto", "id", id);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación eliminada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación eliminada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -299,10 +297,9 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyecto");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            await servicioApi.ObtenerTodosAsync<MetaProyecto>("meta_proyecto");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
@@ -314,11 +311,12 @@
     private void CargarEnFormulario(MetaProyecto a)
     {
         asociacionActual = new MetaProyecto
-        {
-            IdMeta = a.IdMeta,
-            IdProyecto = a.IdProyecto,
-            FechaAsociacion = a.FechaAsociacion
-        };
+            {
+                Id = a.Id,
+                IdMeta = a.IdMeta,
+                IdProyecto = a.IdProyecto,
+                FechaAsociacion = a.FechaAsociacion
+            };
         existeAsociacion = true;
         mensaje = "Asociación cargada.";
         claseAviso = "alert alert-info";

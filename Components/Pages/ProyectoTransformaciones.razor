@@ -1,4 +1,4 @@
-@page "/proyecto-producto"
+@page "/proyectos-transformacion"
 @using FrontendBlazorApi.Models
 @using FrontendBlazorApi.Servicios
 @inherits PaginaAutenticada
@@ -6,12 +6,12 @@
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<PageTitle>Gestión Proyecto Producto</PageTitle>
+<PageTitle>Gestión de Proyectos y Transformaciones</PageTitle>
 
-<!-- ENCABEZADO PRINCIPAL -->
+<!-- ENCABEZADO -->
 <div class="d-flex align-items-center mb-3">
-    <i class="bi bi-link-45deg fs-3 text-primary me-2"></i>
-    <h3 class="mb-0 fw-bold">Gestión Proyecto–Producto</h3>
+    <i class="bi bi-diagram-3 fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión de Proyectos y Transformaciones</h3>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(mensaje))
@@ -21,23 +21,17 @@
     </div>
 }
 
-<!-- BLOQUE FORMULARIO -->
+<!-- FORMULARIO -->
 <div class="card border-primary shadow-sm mb-4">
     <div class="card-header bg-primary text-white fw-bold">
-        <i class="bi bi-pencil-square me-2"></i>Formulario de Asociación
+        <i class="bi bi-pencil-square me-2"></i>Formulario de Asociación Proyecto - Transformación
     </div>
 
     <div class="card-body">
         <div class="d-flex flex-wrap gap-2 mb-3">
-            <button class="btn btn-outline-secondary" @onclick="ProbarConexion">
-                <i class="bi bi-wifi"></i>
-            </button>
-            <button class="btn btn-outline-primary" @onclick="CargarAsociaciones">
-                <i class="bi bi-list"></i>
-            </button>
-            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">
-                <i class="bi bi-eraser"></i>
-            </button>
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion"><i class="bi bi-wifi"></i></button>
+            <button class="btn btn-outline-primary" @onclick="CargarAsociaciones"><i class="bi bi-list"></i></button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario"><i class="bi bi-eraser"></i></button>
         </div>
 
         <EditForm Model="asociacionActual" OnValidSubmit="GuardarSegunEstado">
@@ -45,10 +39,22 @@
             <ValidationSummary />
 
             <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <label class="form-label">Transformación *</label>
+                    <InputSelect class="form-select" @bind-Value="asociacionActual.IdTransformacion">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var t in listaTransformaciones)
+                        {
+                            <option value="@t.Id">@t.Nombre</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => asociacionActual.IdTransformacion)" />
+                </div>
+
+                <div class="col-md-4">
                     <label class="form-label">Proyecto *</label>
                     <InputSelect class="form-select" @bind-Value="asociacionActual.IdProyecto">
-                        <option value="0">-- Seleccione Proyecto --</option>
+                        <option value="0">-- Seleccione --</option>
                         @foreach (var p in listaProyectos)
                         {
                             <option value="@p.Id">@p.Titulo</option>
@@ -57,28 +63,14 @@
                     <ValidationMessage For="@(() => asociacionActual.IdProyecto)" />
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Producto *</label>
-                    <InputSelect class="form-select" @bind-Value="asociacionActual.IdProducto">
-                        <option value="0">-- Seleccione Producto --</option>
-                        @foreach (var pr in listaProductos)
-                        {
-                            <option value="@pr.Id">@pr.Titulo</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="@(() => asociacionActual.IdProducto)" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Fecha Asociación</label>
+                <div class="col-md-4">
+                    <label class="form-label">Fecha de Asociación</label>
                     <InputDate class="form-control" @bind-Value="asociacionActual.FechaAsociacion" />
                 </div>
             </div>
 
             <div class="mt-4 d-flex flex-wrap gap-2">
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-plus-circle"></i>
-                </button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i></button>
                 <button type="button" class="btn btn-warning" @onclick="ActualizarAsociacion" disabled="@(!existeAsociacion)">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
@@ -90,10 +82,10 @@
     </div>
 </div>
 
-<!-- BLOQUE LISTA -->
+<!-- LISTA -->
 <div class="card border-primary shadow-sm">
     <div class="card-header bg-primary text-white fw-bold">
-        <i class="bi bi-table me-2"></i>Lista de Asociaciones
+        <i class="bi bi-table me-2"></i>Lista de Asociaciones Proyecto - Transformación
     </div>
 
     <div class="card-body">
@@ -113,8 +105,9 @@
                 <table class="table table-striped align-middle">
                     <thead class="table-light">
                         <tr>
+                            <th>ID</th>
+                            <th>Transformación</th>
                             <th>Proyecto</th>
-                            <th>Producto</th>
                             <th>Fecha Asociación</th>
                             <th>Acciones</th>
                         </tr>
@@ -123,9 +116,10 @@
                         @foreach (var a in listaAsociaciones)
                         {
                             <tr>
-                                <td>@GetProyectoTitulo(a.IdProyecto)</td>
-                                <td>@GetProductoTitulo(a.IdProducto)</td>
-                                <td>@a.FechaAsociacion?.ToString("yyyy-MM-dd")</td>
+                                <td>@a.Id</td>
+                                <td>@a.TransformacionNombre</td>
+                                <td>@a.ProyectoNombre</td>
+                                <td>@(a.FechaAsociacion?.ToString("yyyy-MM-dd") ?? "-")</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(a))">
                                         <i class="bi bi-upload"></i>
@@ -141,10 +135,11 @@
 </div>
 
 @code {
-    private List<ProyectoProducto> listaAsociaciones = new();
+    private List<ProyectosTransformacion> listaAsociaciones = new();
+    private List<TransformacionInstitucional> listaTransformaciones = new();
     private List<Proyecto> listaProyectos = new();
-    private List<Producto> listaProductos = new();
-    private ProyectoProducto asociacionActual = new();
+
+    private ProyectosTransformacion asociacionActual = new();
     private bool existeAsociacion = false;
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
@@ -160,14 +155,10 @@
     {
         try
         {
+            listaTransformaciones = await servicioApi.ObtenerTodosAsync<TransformacionInstitucional>("transformacioninstitucional") ?? new();
             listaProyectos = await servicioApi.ObtenerTodosAsync<Proyecto>("proyecto") ?? new();
-            listaProductos = await servicioApi.ObtenerTodosAsync<Producto>("producto") ?? new();
         }
-        catch
-        {
-            listaProyectos = new();
-            listaProductos = new();
-        }
+        catch { }
     }
 
     private async Task CargarAsociaciones()
@@ -175,12 +166,12 @@
         try
         {
             cargando = true;
-            listaAsociaciones = await servicioApi.ObtenerTodosAsync<ProyectoProducto>("proyecto_producto") ?? new();
+            listaAsociaciones = await servicioApi.ObtenerTodosAsync<ProyectosTransformacion>("proyectostransformacion") ?? new();
 
             foreach (var a in listaAsociaciones)
             {
+                a.TransformacionNombre = listaTransformaciones.FirstOrDefault(t => t.Id == a.IdTransformacion)?.Nombre ?? $"#{a.IdTransformacion}";
                 a.ProyectoNombre = listaProyectos.FirstOrDefault(p => p.Id == a.IdProyecto)?.Titulo ?? $"#{a.IdProyecto}";
-                a.ProductoNombre = listaProductos.FirstOrDefault(p => p.Id == a.IdProducto)?.Titulo ?? $"#{a.IdProducto}";
             }
 
             mensaje = $"Se cargaron {listaAsociaciones.Count} asociación(es).";
@@ -188,7 +179,7 @@
         }
         catch (Exception ex)
         {
-            mensaje = $"Error al listar asociaciones: {ex.Message}";
+            mensaje = $"Error al listar: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
         finally { cargando = false; }
@@ -206,7 +197,7 @@
     {
         try
         {
-            await servicioApi.CrearAsync("proyecto_producto", asociacionActual);
+            await servicioApi.CrearAsync("proyectostransformacion", asociacionActual);
 
             mensaje = "Asociación creada correctamente.";
             claseAviso = "alert alert-success";
@@ -224,7 +215,7 @@
     {
         try
         {
-            await servicioApi.ActualizarAsync("proyecto_producto", "id", asociacionActual.Id, asociacionActual);
+            await servicioApi.ActualizarAsync("proyectostransformacion", "id", asociacionActual.Id, asociacionActual);
 
             mensaje = "Asociación actualizada correctamente.";
             claseAviso = "alert alert-success";
@@ -239,17 +230,17 @@
 
     private async Task ConfirmarEliminar()
     {
-        if (asociacionActual.IdProyecto == 0 || asociacionActual.IdProducto == 0) return;
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar relación Proyecto {GetProyectoTitulo(asociacionActual.IdProyecto)} con Producto {GetProductoTitulo(asociacionActual.IdProducto)}?");
+        if (asociacionActual.Id == 0) return;
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar la asociación #{asociacionActual.Id}?");
         if (confirmado)
-            await EliminarAsociacion(asociacionActual.IdProyecto, asociacionActual.IdProducto);
+            await EliminarAsociacion(asociacionActual.Id);
     }
 
-    private async Task EliminarAsociacion(int idProyecto, int idProducto)
+    private async Task EliminarAsociacion(int id)
     {
         try
         {
-            await servicioApi.EliminarAsync("proyecto_producto", "id", id);
+            await servicioApi.EliminarAsync("proyectostransformacion", "id", id);
 
             mensaje = "Asociación eliminada correctamente.";
             claseAviso = "alert alert-success";
@@ -267,7 +258,7 @@
     {
         try
         {
-            await servicioApi.ObtenerTodosAsync<ProyectoProducto>("proyecto_producto");
+            await servicioApi.ObtenerTodosAsync<ProyectosTransformacion>("proyectostransformacion");
             mensaje = "Conexión OK.";
             claseAviso = "alert alert-success";
         }
@@ -278,13 +269,13 @@
         }
     }
 
-    private void CargarEnFormulario(ProyectoProducto a)
+    private void CargarEnFormulario(ProyectosTransformacion a)
     {
-        asociacionActual = new ProyectoProducto
+        asociacionActual = new ProyectosTransformacion
             {
                 Id = a.Id,
+                IdTransformacion = a.IdTransformacion,
                 IdProyecto = a.IdProyecto,
-                IdProducto = a.IdProducto,
                 FechaAsociacion = a.FechaAsociacion
             };
         existeAsociacion = true;
@@ -294,14 +285,8 @@
 
     private void LimpiarFormulario()
     {
-        asociacionActual = new ProyectoProducto();
+        asociacionActual = new ProyectosTransformacion();
         existeAsociacion = false;
         mensaje = "";
     }
-
-    private string GetProyectoTitulo(int id)
-        => listaProyectos.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
-
-    private string GetProductoTitulo(int id)
-        => listaProductos.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
 }

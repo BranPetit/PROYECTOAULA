@@ -1,4 +1,4 @@
-@page "/producto-entregable"
+@page "/responsable-entregable"
 @using FrontendBlazorApi.Models
 @using FrontendBlazorApi.Servicios
 @inherits PaginaAutenticada
@@ -6,12 +6,12 @@
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<PageTitle>Gestión Producto Entregable</PageTitle>
+<PageTitle>Gestión de Responsable–Entregable</PageTitle>
 
-<!-- ENCABEZADO PRINCIPAL -->
+<!-- ENCABEZADO -->
 <div class="d-flex align-items-center mb-3">
-    <i class="bi bi-box-seam fs-3 text-primary me-2"></i>
-    <h3 class="mb-0 fw-bold">Gestión Producto–Entregable</h3>
+    <i class="bi bi-person-check fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión de Responsable–Entregable</h3>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(mensaje))
@@ -21,7 +21,7 @@
     </div>
 }
 
-<!-- BLOQUE FORMULARIO -->
+<!-- FORMULARIO -->
 <div class="card border-primary shadow-sm mb-4">
     <div class="card-header bg-primary text-white fw-bold">
         <i class="bi bi-pencil-square me-2"></i>Formulario de Asociación
@@ -29,15 +29,9 @@
 
     <div class="card-body">
         <div class="d-flex flex-wrap gap-2 mb-3">
-            <button class="btn btn-outline-secondary" @onclick="ProbarConexion">
-                <i class="bi bi-wifi"></i>
-            </button>
-            <button class="btn btn-outline-primary" @onclick="CargarAsociaciones">
-                <i class="bi bi-list"></i>
-            </button>
-            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">
-                <i class="bi bi-eraser"></i>
-            </button>
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion"><i class="bi bi-wifi"></i></button>
+            <button class="btn btn-outline-primary" @onclick="CargarAsociaciones"><i class="bi bi-list"></i></button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario"><i class="bi bi-eraser"></i></button>
         </div>
 
         <EditForm Model="asociacionActual" OnValidSubmit="GuardarSegunEstado">
@@ -45,22 +39,22 @@
             <ValidationSummary />
 
             <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Producto *</label>
-                    <InputSelect class="form-select" @bind-Value="asociacionActual.IdProducto">
-                        <option value="0">-- Seleccione Producto --</option>
-                        @foreach (var p in listaProductos)
+                <div class="col-md-4">
+                    <label class="form-label">Responsable *</label>
+                    <InputSelect class="form-select" @bind-Value="asociacionActual.IdResponsable">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var r in listaResponsables)
                         {
-                            <option value="@p.Id">@p.Titulo</option>
+                            <option value="@r.Id">@r.Nombre</option>
                         }
                     </InputSelect>
-                    <ValidationMessage For="@(() => asociacionActual.IdProducto)" />
+                    <ValidationMessage For="@(() => asociacionActual.IdResponsable)" />
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">Entregable *</label>
                     <InputSelect class="form-select" @bind-Value="asociacionActual.IdEntregable">
-                        <option value="0">-- Seleccione Entregable --</option>
+                        <option value="0">-- Seleccione --</option>
                         @foreach (var e in listaEntregables)
                         {
                             <option value="@e.Id">@e.Titulo</option>
@@ -69,19 +63,14 @@
                     <ValidationMessage For="@(() => asociacionActual.IdEntregable)" />
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Fecha Asociación</label>
+                <div class="col-md-4">
+                    <label class="form-label">Fecha de Asociación</label>
                     <InputDate class="form-control" @bind-Value="asociacionActual.FechaAsociacion" />
                 </div>
             </div>
 
             <div class="mt-4 d-flex flex-wrap gap-2">
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-plus-circle"></i>
-                </button>
-                <button type="button" class="btn btn-warning" @onclick="ActualizarAsociacion" disabled="@(!existeAsociacion)">
-                    <i class="bi bi-arrow-clockwise"></i>
-                </button>
+                <button type="submit" class="btn btn-success"><i class="bi bi-plus-circle"></i></button>
                 <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeAsociacion)">
                     <i class="bi bi-trash"></i>
                 </button>
@@ -90,10 +79,14 @@
     </div>
 </div>
 
-<!-- BLOQUE LISTA -->
+<!-- LISTADO -->
 <div class="card border-primary shadow-sm">
-    <div class="card-header bg-primary text-white fw-bold">
-        <i class="bi bi-table me-2"></i>Lista de Asociaciones
+    <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>Lista de Asociaciones Responsable–Entregable</span>
+        <div class="input-group w-50">
+            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" placeholder="Buscar por responsable o entregable..." @bind="textoBusqueda" @bind:event="oninput" />
+        </div>
     </div>
 
     <div class="card-body">
@@ -101,10 +94,10 @@
         {
             <p><em><i class="bi bi-arrow-repeat"></i> Cargando asociaciones...</em></p>
         }
-        else if (listaAsociaciones.Count == 0)
+        else if (listaFiltrada.Count == 0)
         {
             <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle me-2"></i>No hay asociaciones registradas.
+                <i class="bi bi-info-circle me-2"></i>No se encontraron asociaciones que coincidan.
             </div>
         }
         else
@@ -113,19 +106,19 @@
                 <table class="table table-striped align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Producto</th>
+                            <th>Responsable</th>
                             <th>Entregable</th>
                             <th>Fecha Asociación</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var a in listaAsociaciones)
+                        @foreach (var a in listaFiltrada)
                         {
                             <tr>
-                                <td>@GetProductoTitulo(a.IdProducto)</td>
+                                <td>@GetResponsableNombre(a.IdResponsable)</td>
                                 <td>@GetEntregableTitulo(a.IdEntregable)</td>
-                                <td>@a.FechaAsociacion?.ToString("yyyy-MM-dd")</td>
+                                <td>@a.FechaAsociacion?.ToString("dd/MM/yyyy")</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(a))">
                                         <i class="bi bi-upload"></i>
@@ -141,33 +134,40 @@
 </div>
 
 @code {
-    private List<ProductoEntregable> listaAsociaciones = new();
-    private List<Producto> listaProductos = new();
+    private List<Responsable_Entregable> listaAsociaciones = new();
+    private List<Responsable_Entregable> listaFiltrada = new();
+    private List<Responsable> listaResponsables = new();
     private List<Entregable> listaEntregables = new();
-    private ProductoEntregable asociacionActual = new();
+    private Responsable_Entregable asociacionActual = new();
     private bool existeAsociacion = false;
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
+    private string textoBusqueda = "";
 
     protected override async Task OnAutenticacionVerificada()
     {
-        await CargarOpcionesRelacionadas();
+        await CargarResponsables();
+        await CargarEntregables();
         await CargarAsociaciones();
     }
 
-    private async Task CargarOpcionesRelacionadas()
+    private async Task CargarResponsables()
     {
         try
         {
-            listaProductos = await servicioApi.ObtenerTodosAsync<Producto>("producto") ?? new();
+            listaResponsables = await servicioApi.ObtenerTodosAsync<Responsable>("responsable") ?? new();
+        }
+        catch { listaResponsables = new(); }
+    }
+
+    private async Task CargarEntregables()
+    {
+        try
+        {
             listaEntregables = await servicioApi.ObtenerTodosAsync<Entregable>("entregable") ?? new();
         }
-        catch
-        {
-            listaProductos = new();
-            listaEntregables = new();
-        }
+        catch { listaEntregables = new(); }
     }
 
     private async Task CargarAsociaciones()
@@ -175,15 +175,8 @@
         try
         {
             cargando = true;
-            listaAsociaciones = await servicioApi.ObtenerTodosAsync<ProductoEntregable>("producto_entregable") ?? new();
-
-            // Asignar nombres visuales
-            foreach (var a in listaAsociaciones)
-            {
-                a.ProductoNombre = listaProductos.FirstOrDefault(p => p.Id == a.IdProducto)?.Titulo ?? $"#{a.IdProducto}";
-                a.EntregableNombre = listaEntregables.FirstOrDefault(e => e.Id == a.IdEntregable)?.Titulo ?? $"#{a.IdEntregable}";
-            }
-
+            listaAsociaciones = await servicioApi.ObtenerTodosAsync<Responsable_Entregable>("Responsable_Entregable") ?? new();
+            FiltrarAsociaciones();
             mensaje = $"Se cargaron {listaAsociaciones.Count} asociación(es).";
             claseAviso = "alert alert-success";
         }
@@ -195,10 +188,27 @@
         finally { cargando = false; }
     }
 
+    private void FiltrarAsociaciones()
+    {
+        if (string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            listaFiltrada = listaAsociaciones;
+        }
+        else
+        {
+            var busqueda = textoBusqueda.ToLower();
+            listaFiltrada = listaAsociaciones
+                .Where(a =>
+                    GetResponsableNombre(a.IdResponsable).ToLower().Contains(busqueda) ||
+                    GetEntregableTitulo(a.IdEntregable).ToLower().Contains(busqueda))
+                .ToList();
+        }
+    }
+
     private async Task GuardarSegunEstado()
     {
         if (existeAsociacion)
-            await ActualizarAsociacion();
+            mensaje = "Esta asociación ya existe.";
         else
             await CrearAsociacion();
     }
@@ -207,7 +217,7 @@
     {
         try
         {
-            await servicioApi.CrearAsync("producto_entregable", asociacionActual);
+            await servicioApi.CrearAsync("Responsable_Entregable", asociacionActual);
 
             mensaje = "Asociación creada correctamente.";
             claseAviso = "alert alert-success";
@@ -221,36 +231,20 @@
         }
     }
 
-    private async Task ActualizarAsociacion()
-    {
-        try
-        {
-            await servicioApi.ActualizarAsync("producto_entregable", "id", asociacionActual.Id, asociacionActual);
-
-            mensaje = "Asociación actualizada correctamente.";
-            claseAviso = "alert alert-success";
-            await CargarAsociaciones();
-        }
-        catch (Exception ex)
-        {
-            mensaje = $"Error al actualizar: {ex.Message}";
-            claseAviso = "alert alert-danger";
-        }
-    }
-
     private async Task ConfirmarEliminar()
     {
-        if (asociacionActual.IdProducto == 0 || asociacionActual.IdEntregable == 0) return;
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar relación Producto {GetProductoTitulo(asociacionActual.IdProducto)} con Entregable {GetEntregableTitulo(asociacionActual.IdEntregable)}?");
+        if (asociacionActual.IdResponsable == 0 || asociacionActual.IdEntregable == 0) return;
+        bool confirmado = await JS.InvokeAsync<bool>("confirm",
+            $"¿Seguro que desea eliminar la asociación Responsable #{asociacionActual.IdResponsable} - Entregable #{asociacionActual.IdEntregable}?");
         if (confirmado)
-            await EliminarAsociacion(asociacionActual.IdProducto, asociacionActual.IdEntregable);
+            await EliminarAsociacion();
     }
 
-    private async Task EliminarAsociacion(int idProducto, int idEntregable)
+    private async Task EliminarAsociacion()
     {
         try
         {
-            await servicioApi.EliminarAsync("producto_entregable", "id", id);
+            await servicioApi.EliminarAsync("Responsable_Entregable", "IdResponsable", asociacionActual.IdResponsable);
 
             mensaje = "Asociación eliminada correctamente.";
             claseAviso = "alert alert-success";
@@ -268,7 +262,7 @@
     {
         try
         {
-            await servicioApi.ObtenerTodosAsync<ProductoEntregable>("producto_entregable");
+            await servicioApi.ObtenerTodosAsync<Responsable_Entregable>("Responsable_Entregable");
             mensaje = "Conexión OK.";
             claseAviso = "alert alert-success";
         }
@@ -279,12 +273,11 @@
         }
     }
 
-    private void CargarEnFormulario(ProductoEntregable a)
+    private void CargarEnFormulario(Responsable_Entregable a)
     {
-        asociacionActual = new ProductoEntregable
+        asociacionActual = new Responsable_Entregable
             {
-                Id = a.Id,
-                IdProducto = a.IdProducto,
+                IdResponsable = a.IdResponsable,
                 IdEntregable = a.IdEntregable,
                 FechaAsociacion = a.FechaAsociacion
             };
@@ -295,14 +288,21 @@
 
     private void LimpiarFormulario()
     {
-        asociacionActual = new ProductoEntregable();
+        asociacionActual = new Responsable_Entregable();
         existeAsociacion = false;
         mensaje = "";
     }
 
-    private string GetProductoTitulo(int id)
-        => listaProductos.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
+    private string GetResponsableNombre(int id) => listaResponsables.FirstOrDefault(x => x.Id == id)?.Nombre ?? $"#{id}";
+    private string GetEntregableTitulo(int id) => listaEntregables.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
 
-    private string GetEntregableTitulo(int id)
-        => listaEntregables.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
+    private string TextoBusqueda
+    {
+        get => textoBusqueda;
+        set
+        {
+            textoBusqueda = value;
+            FiltrarAsociaciones();
+        }
+    }
 }

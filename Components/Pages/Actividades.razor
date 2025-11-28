@@ -1,0 +1,350 @@
+@page "/actividades"
+@using FrontendBlazorApi.Models
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Gestión de Actividades</PageTitle>
+
+<!-- ENCABEZADO -->
+<div class="d-flex align-items-center mb-3">
+    <i class="bi bi-clipboard-check fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión de Actividades</h3>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(mensaje))
+{
+    <div class="@claseAviso shadow-sm mb-3" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>@mensaje
+    </div>
+}
+
+<!-- FORMULARIO -->
+<div class="card border-primary shadow-sm mb-4">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-clipboard-plus me-2"></i>Formulario de Actividad
+    </div>
+
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion"><i class="bi bi-wifi"></i></button>
+            <button class="btn btn-outline-primary" @onclick="CargarActividades"><i class="bi bi-list"></i></button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario"><i class="bi bi-eraser"></i></button>
+        </div>
+
+        <EditForm Model="actividadActual" OnValidSubmit="GuardarSegunEstado">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Entregable *</label>
+                    <InputSelect class="form-select" @bind-Value="actividadActual.IdEntregable">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var e in listaEntregables)
+                        {
+                            <option value="@e.Id">@e.Titulo</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => actividadActual.IdEntregable)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Título *</label>
+                    <InputText class="form-control" @bind-Value="actividadActual.Titulo" />
+                    <ValidationMessage For="@(() => actividadActual.Titulo)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Prioridad (1-5)</label>
+                    <InputNumber class="form-control" @bind-Value="actividadActual.Prioridad" />
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Descripción</label>
+                    <InputTextArea class="form-control" @bind-Value="actividadActual.Descripcion" Rows="3" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Inicio</label>
+                    <InputDate class="form-control" @bind-Value="actividadActual.FechaInicio" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Fin Prevista</label>
+                    <InputDate class="form-control" @bind-Value="actividadActual.FechaFinPrevista" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha Finalización</label>
+                    <InputDate class="form-control" @bind-Value="actividadActual.FechaFinalizacion" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">% Avance</label>
+                    <InputNumber class="form-control" @bind-Value="actividadActual.PorcentajeAvance" />
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i></button>
+                <button type="button" class="btn btn-warning" @onclick="BuscarPorId" disabled="@(!existeActividad)">
+                    <i class="bi bi-search"></i>
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeActividad)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+<!-- LISTA -->
+<div class="card border-primary shadow-sm">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-table me-2"></i>Lista de Actividades
+    </div>
+
+    <div class="card-body">
+        @if (cargando)
+        {
+            <p><em><i class="bi bi-arrow-repeat"></i> Cargando actividades...</em></p>
+        }
+        else if (listaActividades.Count == 0)
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>No hay actividades registradas.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Entregable</th>
+                            <th>Título</th>
+                            <th>Prioridad</th>
+                            <th>% Avance</th>
+                            <th>Fechas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in listaActividades)
+                        {
+                            <tr>
+                                <td>@a.Id</td>
+                                <td>@a.EntregableNombre</td>
+                                <td>@a.Titulo</td>
+                                <td>@a.Prioridad</td>
+                                <td>@a.PorcentajeAvance</td>
+                                <td>
+                                    @(a.FechaInicio?.ToString("yyyy-MM-dd") ?? "-") → @(a.FechaFinPrevista?.ToString("yyyy-MM-dd") ?? "-")
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(a))">
+                                        <i class="bi bi-upload"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Actividad> listaActividades = new();
+    private List<Entregable> listaEntregables = new();
+    private Actividad actividadActual = new();
+    private bool existeActividad = false;
+    private string mensaje = "";
+    private string claseAviso = "alert alert-info";
+    private bool cargando = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarEntregables();
+        await CargarActividades();
+    }
+
+    private async Task CargarEntregables()
+    {
+        try
+        {
+            listaEntregables = await servicioApi.ObtenerTodosAsync<Entregable>("entregable");
+        }
+        catch { }
+    }
+
+    private async Task CargarActividades()
+    {
+        try
+        {
+            cargando = true;
+            listaActividades = await servicioApi.ObtenerTodosAsync<Actividad>("actividad");
+
+            foreach (var a in listaActividades)
+                a.EntregableNombre = listaEntregables.FirstOrDefault(e => e.Id == a.IdEntregable)?.Titulo ?? $"#{a.IdEntregable}";
+
+            mensaje = $"Se cargaron {listaActividades.Count} actividad(es).";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al listar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+        finally { cargando = false; }
+    }
+
+    private async Task BuscarPorId()
+    {
+        if (actividadActual.Id == 0)
+        {
+            mensaje = "Debe indicar un ID válido.";
+            claseAviso = "alert alert-warning";
+            return;
+        }
+
+        try
+        {
+            var encontrado = await servicioApi.ObtenerPorClaveAsync<Actividad>("actividad", "id", actividadActual.Id);
+
+            if (encontrado != null)
+            {
+                actividadActual = encontrado;
+                existeActividad = true;
+                mensaje = "Actividad cargada.";
+                claseAviso = "alert alert-success";
+            }
+            else
+            {
+                existeActividad = false;
+                mensaje = "Actividad no encontrada.";
+                claseAviso = "alert alert-warning";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al buscar actividad: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task GuardarSegunEstado()
+    {
+        if (existeActividad)
+            await ActualizarActividad();
+        else
+            await CrearActividad();
+    }
+
+    private async Task CrearActividad()
+    {
+        try
+        {
+            await servicioApi.CrearAsync("actividad", actividadActual);
+
+            mensaje = "Actividad creada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarActividades();
+            LimpiarFormulario();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al crear: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ActualizarActividad()
+    {
+        try
+        {
+            await servicioApi.ActualizarAsync("actividad", "id", actividadActual.Id, actividadActual);
+
+            mensaje = "Actividad actualizada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarActividades();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al actualizar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        if (actividadActual.Id == 0) return;
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar la actividad #{actividadActual.Id}?");
+        if (confirmado)
+            await EliminarActividad();
+    }
+
+    private async Task EliminarActividad()
+    {
+        try
+        {
+            await servicioApi.EliminarAsync("actividad", "id", actividadActual.Id);
+
+            mensaje = "Actividad eliminada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarActividades();
+            LimpiarFormulario();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al eliminar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ProbarConexion()
+    {
+        try
+        {
+            await servicioApi.ObtenerTodosAsync<Actividad>("actividad");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error de conexión: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private void CargarEnFormulario(Actividad a)
+    {
+        actividadActual = new Actividad
+            {
+                Id = a.Id,
+                IdEntregable = a.IdEntregable,
+                Titulo = a.Titulo,
+                Descripcion = a.Descripcion,
+                FechaInicio = a.FechaInicio,
+                FechaFinPrevista = a.FechaFinPrevista,
+                FechaFinalizacion = a.FechaFinalizacion,
+                Prioridad = a.Prioridad,
+                PorcentajeAvance = a.PorcentajeAvance
+            };
+        existeActividad = true;
+        mensaje = "Actividad cargada.";
+        claseAviso = "alert alert-info";
+    }
+
+    private void LimpiarFormulario()
+    {
+        actividadActual = new Actividad();
+        existeActividad = false;
+        mensaje = "";
+    }
+}

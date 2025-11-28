@@ -1,7 +1,9 @@
-@page "/ejecucionpresupuestos"
-@using System.Net.Http.Json
+@page "/ejecucion-presupuesto"
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
+@using FrontendBlazorApi.Servicios
+@using System.Globalization
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
@@ -155,6 +157,8 @@
     private bool existeEjecucion = false;
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
+    private bool cargando = false;
+    private const string urlBaseApi = "api/ejecucionpresupuesto";
     private const string urlBaseApi = "api/ejecucionpresupuesto";
 
     protected override async Task OnInitializedAsync()
@@ -165,9 +169,8 @@
 
     private async Task CargarPresupuestos()
     {
-        try
-        {
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
+            listaPresupuestos = await servicioApi.ObtenerTodosAsync<Presupuesto>("presupuesto");
+            listaPresupuestos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Presupuesto>>>("api/presupuesto"))?.Datos ?? new();
             listaPresupuestos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Presupuesto>>>("api/presupuesto"))?.Datos ?? new();
         }
         catch
@@ -179,37 +182,76 @@
     private async Task CargarEjecuciones()
     {
         try
-        {
-            cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<EjecucionPresupuesto>>>(urlBaseApi);
-            listaEjecuciones = resp?.Datos ?? new();
+            listaEjecuciones = await servicioApi.ObtenerTodosAsync<EjecucionPresupuesto>("ejecucionpresupuesto");
+
+            foreach (var e in listaEjecuciones)
+                e.PresupuestoNombre = GetPresupuestoNombre(e.IdPresupuesto);
+
+            // asignar PresupuestoNombre para visualización (si se cargó la lista de presupuestos)
+            foreach (var e in listaEjecuciones)
+                e.PresupuestoNombre = GetPresupuestoNombre(e.IdPresupuesto);
+
+            // asignar PresupuestoNombre para visualización (si se cargó la lista de presupuestos)
+            foreach (var e in listaEjecuciones)
+                e.PresupuestoNombre = GetPresupuestoNombre(e.IdPresupuesto);
+
             mensaje = $"Se cargaron {listaEjecuciones.Count} ejecución(es).";
+            claseAviso = "alert alert-success";
+        }
+    private async Task BuscarPorId()
+    {
+        if (idBusqueda == 0)
+        {
+            mensaje = "Debe indicar un ID válido.";
+            claseAviso = "alert alert-warning";
+            return;
+        }
+
+        try
+        {
+            var encontrado = await servicioApi.ObtenerPorClaveAsync<EjecucionPresupuesto>("ejecucionpresupuesto", "id", idBusqueda);
+
+            if (encontrado == null)
+            {
+                mensaje = $"No se encontró una ejecución con ID {idBusqueda}.";
+                claseAviso = "alert alert-warning";
+                existeEjecucion = false;
+                ejecucionActual = new();
+                return;
+            }
+
+            ejecucionActual = encontrado;
+            existeEjecucion = true;
+            mensaje = "Ejecución cargada.";
             claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
-            mensaje = $"Error al listar ejecuciones: {ex.Message}";
+            mensaje = $"Error al buscar: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
-        finally { cargando = false; }
     }
 
-    private async Task GuardarSegunEstado()
-    {
-        if (existeEjecucion)
-            await ActualizarEjecucion();
-        else
-            await CrearEjecucion();
-    }
-
-    private async Task CrearEjecucion()
-    {
-        try
         {
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, ejecucionActual);
+            mensaje = $"Error al buscar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
 
+        {
+            mensaje = $"Error al buscar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+            await servicioApi.CrearAsync("ejecucionpresupuesto", ejecucionActual);
+        if (existeEjecucion)
+            mensaje = "Ejecución creada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarEjecuciones();
+            LimpiarFormulario();
+        }
+            var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
             if (resp.IsSuccessStatusCode)
             {
                 mensaje = "Ejecución creada correctamente.";
@@ -220,24 +262,22 @@
             else
             {
                 mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            await servicioApi.ActualizarAsync("ejecucionpresupuesto", "id", ejecucionActual.Id, ejecucionActual);
+            var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
+            mensaje = "Ejecución actualizada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarEjecuciones();
         }
+            var payload = new
+            {
+                IdPresupuesto = ejecucionActual.IdPresupuesto,
+                Anio = ejecucionActual.Anio,
+                MontoPlaneado = ejecucionActual.MontoPlaneado,
+                MontoEjecutado = ejecucionActual.MontoEjecutado,
+                Observaciones = ejecucionActual.Observaciones
+            };
         catch (Exception ex)
-        {
-            mensaje = $"Error al crear: {ex.Message}";
-            claseAviso = "alert alert-danger";
-        }
-    }
-
-    private async Task ActualizarEjecucion()
-    {
-        try
-        {
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
-            var ruta = $"{urlBaseApi}/id/{ejecucionActual.Id}";
-            var resp = await cliente.PutAsJsonAsync(ruta, ejecucionActual);
-
+            var resp = await cliente.PutAsJsonAsync(ruta, payload);
             if (resp.IsSuccessStatusCode)
             {
                 mensaje = "Ejecución actualizada correctamente.";
@@ -247,15 +287,35 @@
             else
             {
                 mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            await servicioApi.EliminarAsync("ejecucionpresupuesto", "id", id);
+            var payload = new
+            {
+                IdPresupuesto = ejecucionActual.IdPresupuesto,
+                Anio = ejecucionActual.Anio,
+                MontoPlaneado = ejecucionActual.MontoPlaneado,
+                MontoEjecutado = ejecucionActual.MontoEjecutado,
+                Observaciones = ejecucionActual.Observaciones
+            };
+
+            var resp = await cliente.PutAsJsonAsync(ruta, payload);
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Ejecución actualizada correctamente.";
+    private async Task ProbarConexion()
+    {
+        try
+        {
+            await servicioApi.ObtenerTodosAsync<EjecucionPresupuesto>("ejecucionpresupuesto");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
-            mensaje = $"Error al actualizar: {ex.Message}";
+            mensaje = $"Error de conexión: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
     }
+
 
     private async Task ConfirmarEliminar()
     {
@@ -263,29 +323,22 @@
         bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar la ejecución {ejecucionActual.Id}?");
         if (confirmado)
             await EliminarEjecucion(ejecucionActual.Id);
-    }
-
-    private async Task EliminarEjecucion(int id)
+    private async Task ProbarConexion()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiPresupuesto");
-            var ruta = $"{urlBaseApi}/id/{id}";
-            var resp = await cliente.DeleteAsync(ruta);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Ejecución eliminada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarEjecuciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            var cliente = fabricaHttp.CreateClient("ApiEjecucionPresupuesto");
+            var resp = await cliente.GetAsync(urlBaseApi);
+            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
+            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
         }
+        catch (Exception ex)
+        {
+            mensaje = $"Error de conexión: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
         catch (Exception ex)
         {
             mensaje = $"Error al eliminar: {ex.Message}";
@@ -293,17 +346,33 @@
         }
     }
 
+    private async Task ProbarConexion()
+    {
+        try
+        {
+            var cliente = fabricaHttp.CreateClient("ApiEjecucionPresupuesto");
+            var resp = await cliente.GetAsync(urlBaseApi);
+            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
+            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error de conexión: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
     private void CargarEnFormulario(EjecucionPresupuesto e)
     {
         ejecucionActual = new EjecucionPresupuesto
-        {
-            Id = e.Id,
-            IdPresupuesto = e.IdPresupuesto,
-            Anio = e.Anio,
-            MontoPlaneado = e.MontoPlaneado,
-            MontoEjecutado = e.MontoEjecutado,
-            Observaciones = e.Observaciones
-        };
+            {
+                Id = e.Id,
+                IdPresupuesto = e.IdPresupuesto,
+                Anio = e.Anio,
+                MontoPlaneado = e.MontoPlaneado,
+                MontoEjecutado = e.MontoEjecutado,
+                Observaciones = e.Observaciones
+            };
         existeEjecucion = true;
         mensaje = "Ejecución cargada.";
         claseAviso = "alert alert-info";

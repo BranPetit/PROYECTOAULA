@@ -1,0 +1,301 @@
+@page "/archivos"
+@using FrontendBlazorApi.Models
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Gestión de Archivos</PageTitle>
+
+<!-- ENCABEZADO -->
+<div class="d-flex align-items-center mb-3">
+    <i class="bi bi-folder2-open fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión de Archivos</h3>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(mensaje))
+{
+    <div class="@claseAviso shadow-sm mb-3" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>@mensaje
+    </div>
+}
+
+<!-- FORMULARIO -->
+<div class="card border-primary shadow-sm mb-4">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-upload me-2"></i>Formulario de Archivos
+    </div>
+
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion"><i class="bi bi-wifi"></i></button>
+            <button class="btn btn-outline-primary" @onclick="CargarArchivos"><i class="bi bi-list"></i></button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario"><i class="bi bi-eraser"></i></button>
+        </div>
+
+        <EditForm Model="archivoActual" OnValidSubmit="GuardarSegunEstado">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Usuario *</label>
+                    <InputSelect class="form-select" @bind-Value="archivoActual.IdUsuario">
+                        <option value="0">-- Seleccione --</option>
+                        @foreach (var u in listaUsuarios)
+                        {
+                            <option value="@u.Id">@u.Email</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => archivoActual.IdUsuario)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Nombre *</label>
+                    <InputText class="form-control" @bind-Value="archivoActual.Nombre" />
+                    <ValidationMessage For="@(() => archivoActual.Nombre)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Tipo</label>
+                    <InputText class="form-control" @bind-Value="archivoActual.Tipo" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Ruta *</label>
+                    <InputText class="form-control" @bind-Value="archivoActual.Ruta" />
+                    <ValidationMessage For="@(() => archivoActual.Ruta)" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Fecha</label>
+                    <InputDate class="form-control" @bind-Value="archivoActual.Fecha" />
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i></button>
+                <button type="button" class="btn btn-warning" @onclick="ActualizarArchivo" disabled="@(!existeArchivo)">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeArchivo)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+<!-- LISTA -->
+<div class="card border-primary shadow-sm">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-table me-2"></i>Lista de Archivos
+    </div>
+
+    <div class="card-body">
+        @if (cargando)
+        {
+            <p><em><i class="bi bi-arrow-repeat"></i> Cargando archivos...</em></p>
+        }
+        else if (listaArchivos.Count == 0)
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>No hay archivos registrados.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuario</th>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Ruta</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in listaArchivos)
+                        {
+                            <tr>
+                                <td>@a.Id</td>
+                                <td>@a.UsuarioNombre</td>
+                                <td>@a.Nombre</td>
+                                <td>@a.Tipo</td>
+                                <td>@a.Ruta</td>
+                                <td>@(a.Fecha?.ToString("yyyy-MM-dd") ?? "-")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(a))">
+                                        <i class="bi bi-upload"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Archivo> listaArchivos = new();
+    private List<Usuario> listaUsuarios = new();
+
+    private Archivo archivoActual = new();
+    private bool existeArchivo = false;
+    private string mensaje = "";
+    private string claseAviso = "alert alert-info";
+    private bool cargando = false;
+    private const string urlBaseApi = "api/archivo";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarUsuarios();
+        await CargarArchivos();
+    }
+
+    private async Task CargarUsuarios()
+    {
+        try
+        {
+            listaUsuarios = await servicioApi.ObtenerTodosAsync<Usuario>("usuario");
+        }
+        catch { }
+    }
+
+    private async Task CargarArchivos()
+    {
+        try
+        {
+            cargando = true;
+            listaArchivos = await servicioApi.ObtenerTodosAsync<Archivo>("archivo");
+
+            foreach (var a in listaArchivos)
+            {
+                a.UsuarioNombre = listaUsuarios.FirstOrDefault(u => u.Id == a.IdUsuario)?.Email ?? $"#{a.IdUsuario}";
+            }
+
+            mensaje = $"Se cargaron {listaArchivos.Count} archivo(s).";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al listar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+        finally { cargando = false; }
+    }
+
+    private async Task GuardarSegunEstado()
+    {
+        if (existeArchivo)
+            await ActualizarArchivo();
+        else
+            await CrearArchivo();
+    }
+
+    private async Task CrearArchivo()
+    {
+        try
+        {
+            await servicioApi.CrearAsync("archivo", archivoActual);
+
+            mensaje = "Archivo creado correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarArchivos();
+            LimpiarFormulario();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al crear: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ActualizarArchivo()
+    {
+        try
+        {
+            await servicioApi.ActualizarAsync("archivo", "id", archivoActual.Id, archivoActual);
+
+            mensaje = "Archivo actualizado correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarArchivos();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al actualizar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        if (archivoActual.Id == 0) return;
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar el archivo #{archivoActual.Id}?");
+        if (confirmado)
+            await EliminarArchivo(archivoActual.Id);
+    }
+
+    private async Task EliminarArchivo(int id)
+    {
+        try
+        {
+            await servicioApi.EliminarAsync("archivo", "id", id);
+
+            mensaje = "Archivo eliminado correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarArchivos();
+            LimpiarFormulario();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al eliminar: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private async Task ProbarConexion()
+    {
+        try
+        {
+            await servicioApi.ObtenerTodosAsync<Archivo>("archivo");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error de conexión: {ex.Message}";
+            claseAviso = "alert alert-danger";
+        }
+    }
+
+    private void CargarEnFormulario(Archivo a)
+    {
+        archivoActual = new Archivo
+            {
+                Id = a.Id,
+                IdUsuario = a.IdUsuario,
+                Ruta = a.Ruta,
+                Nombre = a.Nombre,
+                Tipo = a.Tipo,
+                Fecha = a.Fecha
+            };
+        existeArchivo = true;
+        mensaje = "Archivo cargado.";
+        claseAviso = "alert alert-info";
+    }
+
+    private void LimpiarFormulario()
+    {
+        archivoActual = new Archivo();
+        existeArchivo = false;
+        mensaje = "";
+    }
+}
