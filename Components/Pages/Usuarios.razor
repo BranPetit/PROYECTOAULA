@@ -205,7 +205,15 @@ else
     {
         try
         {
-            var resp = await servicioApi.CrearAsync("usuario", usuarioActual);
+            var json = new
+            {
+                Email = usuarioActual.Email,
+                Contrasena = usuarioActual.Contrasena,
+                RutaAvatar = usuarioActual.RutaAvatar,
+                Activo = usuarioActual.Activo
+            };
+
+            var resp = await servicioApi.CrearAsync("usuario", json);
 
             mensaje = "Usuario creado correctamente.";
             claseAviso = "alert alert-success";
@@ -226,8 +234,15 @@ else
     {
         try
         {
+            var json = new
+            {
+                Email = usuarioActual.Email,
+                Contrasena = usuarioActual.Contrasena,
+                RutaAvatar = usuarioActual.RutaAvatar,
+                Activo = usuarioActual.Activo
+            };
             var resp = await servicioApi.ActualizarAsync(
-                "usuario", "id", usuarioActual.Id, usuarioActual);
+                "usuario", "id", usuarioActual.Id, json);
 
             mensaje = "Usuario actualizado correctamente.";
             claseAviso = "alert alert-success";
