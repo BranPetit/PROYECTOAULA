@@ -1,33 +1,5 @@
 ﻿@page "/home"
-
-@using FrontendBlazorApi.Models
-@using FrontendBlazorApi.Servicios
-
-@inject NavigationManager Navigation
-@* @inject ServicioAutenticacion Authservice
-@inject NavigationManager nav
-
-@if (!estaAutenticado)
-{
-    <p>Redirigiendo...</p>
-}
-
-<PageTitle>Sistema de Gestión de Proyectos</PageTitle>
-
-<!-- EL RESTO DEL HTML IGUAL -->
-@code {
-    private bool estaAutenticado = true;
-
-    protected override async Task OnInitializedAsync()
-    {
-        estaAutenticado = await Authservice.EstaAutenticadoAsync();
-
-        if (!estaAutenticado)
-        {
-            Navigation.NavigateTo("/login", true);
-        }
-    }
-} *@
+@inject NavigationManager Nav
 
 <style>
     body {
@@ -42,80 +14,157 @@
         cursor: pointer;
     }
 
-    .dashboard-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-    }
+        .dashboard-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
 
     .card-header-custom {
-        height: 130px;
+        height: 120px;
         background-size: cover;
         background-position: center;
     }
 
-    .btn-custom {
-        transition: 0.3s ease;
-        border-radius: 25px !important;
+    h2.section-title {
+        margin-top: 60px;
+        font-weight: bold;
+        color: #333;
     }
 
-    .btn-custom:hover {
-        transform: scale(1.07);
-    }
 </style>
 
-<div class="container mt-5">
-    <h1 class="text-center mb-2 fw-bold" style="font-size: 2.8rem;">📊 Sistema de Gestión de Proyectos</h1>
-    <p class="text-center text-muted mb-5" style="font-size: 1.2rem;">Administra fácilmente proyectos, entregables, responsables y variables estratégicas.</p>
+<div class="container mt-4">
 
+    <h1 class="text-center fw-bold">📊 Panel Principal</h1>
+    <p class="text-center text-muted">Selecciona una funcionalidad.</p>
+
+    <!-- ========================== -->
+    <!--    GRUPO A - CONFIGURACIÓN -->
+    <!-- ========================== -->
+    <h2 class="section-title">⚙️ Configuración</h2>
     <div class="row g-4">
 
-        <!-- Proyectos -->
-        <div class="col-md-3">
-            <div class="card dashboard-card border-0 shadow">
-                <div class="card-header-custom" style="background-image: url('/imagenes/proyectos.jpg');"></div>
-                <div class="card-body text-center">
-                    <h3 class="text-primary fw-bold">📁 Proyectos</h3>
-                    <p class="text-muted">Administra proyectos estratégicos y su avance.</p>
-                    <NavLink class="btn btn-outline-primary btn-custom px-4" href="/tipoproyectos">Ver Proyectos</NavLink>
-                </div>
-            </div>
-        </div>
-
-        <!-- Entregables -->
-        <div class="col-md-3">
-            <div class="card dashboard-card border-0 shadow">
-                <div class="card-header-custom" style="background-image: url('/imagenes/entregables.png');"></div>
-                <div class="card-body text-center">
-                    <h3 class="text-success fw-bold">📦 Entregables</h3>
-                    <p class="text-muted">Gestiona todos los entregables del sistema.</p>
-                    <NavLink class="btn btn-outline-success btn-custom px-4" href="/entregables">Ver Entregables</NavLink>
-                </div>
-            </div>
-        </div>
-
-        <!-- Responsables -->
-        <div class="col-md-3">
-            <div class="card dashboard-card border-0 shadow">
-                <div class="card-header-custom" style="background-image: url('/imagenes/responsables.jpg');"></div>
-                <div class="card-body text-center">
-                    <h3 class="text-warning fw-bold">👤 Responsables</h3>
-                    <p class="text-muted">Controla  los responsables y las asignaciones.                     </p>
-                    <NavLink class="btn btn-outline-warning btn-custom px-4" href="/tiporesponsables">Ver Responsables</NavLink>
-                </div>
-            </div>
-        </div>
-
-        <!-- Variables Estratégicas -->
-        <div class="col-md-3">
-            <div class="card dashboard-card border-0 shadow">
-                <div class="card-header-custom" style="background-image: url('/imagenes/variables.webp');"></div>
-                <div class="card-body text-center">
-                    <h3 class="text-danger fw-bold">🎯 Variables</h3>
-                    <p class="text-muted">Monitorea las variables estratégicas.                   </p>
-                    <NavLink class="btn btn-outline-danger btn-custom px-4" href="/variableestrategicas">Ver Variables</NavLink>
-                </div>
-            </div>
-        </div>
+        @foreach (var item in new[]
+                {
+                new { Titulo="Usuarios", Ruta="usuarios", Img="/imagenes/Usuarios.png" },
+                new { Titulo="Tipo Productos", Ruta="tipoproductos", Img="/imagenes/tipoprod.png" },
+                new { Titulo="Tipo Proyectos", Ruta="tipoproyectos", Img="/imagenes/tipoproy.png" },
+                new { Titulo="Tipo Responsables", Ruta="tiporesponsables", Img="/imagenes/tiporespo.png" },
+                new { Titulo="Estados", Ruta="estados", Img="/imagenes/estado.png" }
+                })
+        {
+            @Card(item.Titulo, item.Ruta, item.Img)
+        }
 
     </div>
+
+
+    <!-- ========================== -->
+    <!--    GRUPO B - ESTRATEGIA   -->
+    <!-- ========================== -->
+    <h2 class="section-title">🎯 Planeación Estratégica</h2>
+    <div class="row g-4">
+
+        @foreach (var item in new[]
+                {
+                new { Titulo="Variables Estratégicas", Ruta="variableestrategicas", Img="/imagenes/variables.webp" },
+                new { Titulo="Transformaciones Institucionales", Ruta="transformacionesinstitucionales", Img="/imagenes/trans.png" },
+                new { Titulo="Objetivos Estratégicos", Ruta="objetivos-estrategicos", Img="/imagenes/objetivos.png" },
+                new { Titulo="Metas Estratégicas", Ruta="metas-estrategicas", Img="/imagenes/metas.png" }
+                })
+        {
+            @Card(item.Titulo, item.Ruta, item.Img)
+        }
+
+    </div>
+
+
+    <!-- ========================== -->
+    <!--     GRUPO C - PROYECTOS    -->
+    <!-- ========================== -->
+    <h2 class="section-title">📁 Proyectos, Entregables y Gestión</h2>
+    <div class="row g-4">
+
+        @foreach (var item in new[]
+                {
+                new { Titulo="Proyectos", Ruta="proyectos", Img="/imagenes/proyectos.jpg" },
+                new { Titulo="Entregables", Ruta="entregables", Img="/imagenes/entregables.png" },
+                new { Titulo="Responsables", Ruta="responsables", Img="/imagenes/responsables.jpg" },
+                new { Titulo="Productos", Ruta="productos", Img="/imagenes/productos.png" },
+                new { Titulo="Productos Entregables", Ruta="producto-entregable", Img="/imagenes/prodent.png" },
+                new { Titulo="Responsable Entregable", Ruta="responsable-entregable", Img="/imagenes/respent.png" },
+                new { Titulo="Proyecto Producto", Ruta="proyecto-producto", Img="/imagenes/prodpro.png" },
+                new { Titulo="Archivos y Entregables", Ruta="archivoentregable", Img="/imagenes/archent.png" },
+                new { Titulo="Archivos", Ruta="archivos", Img="/imagenes/archivos.png" }
+                })
+        {
+            @Card(item.Titulo, item.Ruta, item.Img)
+        }
+
+    </div>
+
+
+    <!-- ========================== -->
+    <!--     GRUPO D - PRESUPUESTO  -->
+    <!-- ========================== -->
+    <h2 class="section-title">💰 Presupuestos</h2>
+    <div class="row g-4">
+
+        @foreach (var item in new[]
+                {
+                new { Titulo="Presupuestos", Ruta="presupuestos", Img="/imagenes/presupuesto.png" },
+                new { Titulo="Distribución Presupuesto", Ruta="distribucion-presupuesto", Img="/imagenes/distp.png" },
+                new { Titulo="Ejecución Presupuesto", Ruta="ejecucion-presupuesto", Img="/imagenes/ejecp.png" }
+                })
+        {
+            @Card(item.Titulo, item.Ruta, item.Img)
+        }
+
+    </div>
+
+
+    <!-- ========================== -->
+    <!--       GRUPO E - OTROS      -->
+    <!-- ========================== -->
+    <h2 class="section-title">📌 Otros</h2>
+    <div class="row g-4">
+
+        @foreach (var item in new[]
+                {
+                new { Titulo="Actividades", Ruta="actividades", Img="/imagenes/actividades.png" },
+                new { Titulo="Estado de Proyectos", Ruta="estado-proyecto", Img="/imagenes/estadop.png" },
+                new { Titulo="Proyectos Transformación", Ruta="proyectos-transformacion", Img="/imagenes/proytrans.png" },
+                new { Titulo="Metas de Proyectos", Ruta="meta-proyecto", Img="/imagenes/metap.png" }
+                })
+        {
+            @Card(item.Titulo, item.Ruta, item.Img)
+        }
+
+    </div>
+
 </div>
+
+@code {
+
+    RenderFragment Card(string titulo, string ruta, string img) => __builder =>
+    {
+        <div class="col-md-3">
+
+            <NavLink class="card dashboard-card border-0 shadow w-100 p-0 text-start"
+                     href="@("/" + ruta)"
+                     style="text-decoration:none; color:inherit;">
+
+                <div class="card-header-custom" style="@($"background-image: url('{img}')")"></div>
+
+                <div class="card-body text-center">
+                    <h4 class="fw-bold">@titulo</h4>
+                </div>
+
+            </NavLink>
+
+        </div>
+        ;
+    };
+
+}
+
