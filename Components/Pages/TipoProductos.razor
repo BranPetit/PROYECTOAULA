@@ -2,13 +2,14 @@
 @using System.Net.Http.Json
 @using System.ComponentModel.DataAnnotations
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
-@inject IJSRuntime JS
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @rendermode InteractiveServer
 
-<PageTitle>Tipos de producto</PageTitle>
+<PageTitle>Tipos de Producto</PageTitle>
 
-<h3>Gestión de Tipos de producto</h3>
+<h3>Gestión de Tipos de Producto</h3>
 
 <!-- Botones globales -->
 <div class="mb-3 d-flex gap-2">
@@ -29,7 +30,7 @@
     <div class="@claseAviso" role="alert">@mensaje</div>
 }
 
-<h4>Formulario de Tipo de producto</h4>
+<h4>Formulario de Tipo de Producto</h4>
 
 <EditForm Model="tipoProductoActual" OnValidSubmit="GuardarSegunEstado">
     <DataAnnotationsValidator />
@@ -52,7 +53,7 @@
     <div class="mt-3 d-flex flex-wrap gap-2">
         <button type="submit" class="btn btn-primary">@textoBotonGuardar</button>
         <button type="button" class="btn btn-warning" @onclick="ActualizarTipoProducto" disabled="@(!existeTipoProducto)">Actualizar</button>
-        <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeTipoProducto)">Eliminar</button>
+        <button type="button" class="btn btn-danger" @onclick="EliminarTipoProducto" disabled="@(!existeTipoProducto)">Eliminar</button>
     </div>
 </EditForm>
 
@@ -108,21 +109,23 @@ else
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
 
-    private const string urlBaseApi = "api/tipoproducto";
-
     protected override async Task OnInitializedAsync()
     {
         await CargarTiposProducto();
     }
 
+    // ---------------------------------------------------------
+    // OBTENER TODOS
+    // ---------------------------------------------------------
     private async Task CargarTiposProducto()
     {
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiTipoProducto");
-            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<TipoProducto>>>(urlBaseApi);
-            listaTiposProducto = respuesta?.Datos ?? new();
+
+            listaTiposProducto =
+                await servicioApi.ObtenerTodosAsync<TipoProducto>("tipoproducto");
+
             mensaje = $"Se cargaron {listaTiposProducto.Count} tipo(s) de producto.";
             claseAviso = "alert alert-success";
         }
@@ -134,6 +137,9 @@ else
         finally { cargando = false; }
     }
 
+    // ---------------------------------------------------------
+    // BUSCAR POR ID
+    // ---------------------------------------------------------
     private async Task BuscarPorId()
     {
         if (idBusqueda == 0)
@@ -145,30 +151,29 @@ else
 
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiTipoProducto");
-            var ruta = $"{urlBaseApi}/id/{idBusqueda}";
-            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<TipoProducto>>>(ruta);
+            var encontrado = await servicioApi.ObtenerPorClaveAsync<TipoProducto>(
+                "tipoproducto", "id", idBusqueda);
 
-            if (respuesta?.Datos is null || !respuesta.Datos.Any())
+            if (encontrado == null)
             {
-                mensaje = $"No se encontró un tipo de producto con ID {idBusqueda}.";
+                mensaje = $"No existe un tipo de producto con ID {idBusqueda}.";
                 claseAviso = "alert alert-warning";
                 existeTipoProducto = false;
                 textoBotonGuardar = "Crear";
-                tipoProductoActual = new TipoProducto();
+                tipoProductoActual = new();
                 return;
             }
 
-            var encontrado = respuesta.Datos.First();
             tipoProductoActual = encontrado;
             existeTipoProducto = true;
             textoBotonGuardar = "Actualizar";
+
             mensaje = "Tipo de producto cargado.";
             claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
-            mensaje = $"No existe el tipo de producto con ID {idBusqueda}: {ex.Message}";
+            mensaje = $"Error al buscar: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
     }
@@ -181,31 +186,20 @@ else
             await CrearTipoProducto();
     }
 
+    // ---------------------------------------------------------
+    // CREAR
+    // ---------------------------------------------------------
     private async Task CrearTipoProducto()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiTipoProducto");
-            var tipoProductoParaCrear = new
-            {
-                Nombre = tipoProductoActual.Nombre,
-                Descripcion = tipoProductoActual.Descripcion
-            };
+            await servicioApi.CrearAsync("tipoproducto", tipoProductoActual);
 
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, tipoProductoParaCrear);
+            mensaje = "Tipo de producto creado correctamente.";
+            claseAviso = "alert alert-success";
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Tipo de producto creado correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarTiposProducto();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            await CargarTiposProducto();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -214,33 +208,20 @@ else
         }
     }
 
+    // ---------------------------------------------------------
+    // ACTUALIZAR
+    // ---------------------------------------------------------
     private async Task ActualizarTipoProducto()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiTipoProducto");
-            var ruta = $"{urlBaseApi}/id/{tipoProductoActual.Id}";
+            await servicioApi.ActualizarAsync(
+                "tipoproducto", "id", tipoProductoActual.Id, tipoProductoActual);
 
-            // Enviar solo los campos editables, sin Id
-            var tipoProductoParaActualizar = new
-            {
-                Nombre = tipoProductoActual.Nombre,
-                Descripcion = tipoProductoActual.Descripcion
-            };
+            mensaje = "Actualizado correctamente.";
+            claseAviso = "alert alert-success";
 
-            var resp = await cliente.PutAsJsonAsync(ruta, tipoProductoParaActualizar);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Actualizado correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarTiposProducto();
-            }
-            else
-            {
-                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            await CargarTiposProducto();
         }
         catch (Exception ex)
         {
@@ -249,33 +230,20 @@ else
         }
     }
 
-    private async Task ConfirmarEliminar()
-    {
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar el tipo de producto con ID {tipoProductoActual.Id}?");
-        if (confirmado)
-            await EliminarTipoProducto();
-    }
-
+    // ---------------------------------------------------------
+    // ELIMINAR
+    // ---------------------------------------------------------
     private async Task EliminarTipoProducto()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiTipoProducto");
-            var ruta = $"{urlBaseApi}/id/{tipoProductoActual.Id}";
-            var resp = await cliente.DeleteAsync(ruta);
+            await servicioApi.EliminarAsync("tipoproducto", "id", tipoProductoActual.Id);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Eliminado correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarTiposProducto();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Eliminado correctamente.";
+            claseAviso = "alert alert-success";
+
+            await CargarTiposProducto();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -284,14 +252,17 @@ else
         }
     }
 
+    // ---------------------------------------------------------
+    // PROBAR CONEXIÓN
+    // ---------------------------------------------------------
     private async Task ProbarConexion()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiTipoProducto");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            await servicioApi.ObtenerTodosAsync<TipoProducto>("tipoproducto");
+
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
@@ -308,8 +279,10 @@ else
             Nombre = e.Nombre,
             Descripcion = e.Descripcion
         };
+
         existeTipoProducto = true;
         textoBotonGuardar = "Actualizar";
+
         mensaje = "Tipo de producto cargado desde listado.";
         claseAviso = "alert alert-info";
     }
@@ -318,8 +291,10 @@ else
     {
         tipoProductoActual = new TipoProducto();
         tipoProductoActual.Id = 0;
+
         existeTipoProducto = false;
         textoBotonGuardar = "Crear";
+
         mensaje = "";
         claseAviso = "alert alert-info";
     }

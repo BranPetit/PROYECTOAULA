@@ -1,7 +1,8 @@
 @page "/proyectos-transformacion"
-@using System.Net.Http.Json
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
@@ -143,9 +144,8 @@
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
-    private const string urlBaseApi = "api/proyectostransformacion";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAutenticacionVerificada()
     {
         await CargarOpcionesRelacionadas();
         await CargarAsociaciones();
@@ -155,9 +155,8 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyectosTransformacion");
-            listaTransformaciones = (await cliente.GetFromJsonAsync<RespuestaApi<List<TransformacionInstitucional>>>("api/transformacioninstitucional"))?.Datos ?? new();
-            listaProyectos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Proyecto>>>("api/proyecto"))?.Datos ?? new();
+            listaTransformaciones = await servicioApi.ObtenerTodosAsync<TransformacionInstitucional>("transformacioninstitucional") ?? new();
+            listaProyectos = await servicioApi.ObtenerTodosAsync<Proyecto>("proyecto") ?? new();
         }
         catch { }
     }
@@ -167,9 +166,7 @@
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiProyectosTransformacion");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<ProyectosTransformacion>>>(urlBaseApi);
-            listaAsociaciones = resp?.Datos ?? new();
+            listaAsociaciones = await servicioApi.ObtenerTodosAsync<ProyectosTransformacion>("proyectostransformacion") ?? new();
 
             foreach (var a in listaAsociaciones)
             {
@@ -200,27 +197,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyectosTransformacion");
-            var payload = new
-            {
-                IdTransformacion = asociacionActual.IdTransformacion,
-                IdProyecto = asociacionActual.IdProyecto,
-                FechaAsociacion = asociacionActual.FechaAsociacion
-            };
+            await servicioApi.CrearAsync("proyectostransformacion", asociacionActual);
 
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación creada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación creada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -233,27 +215,11 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyectosTransformacion");
-            var ruta = $"{urlBaseApi}/id/{asociacionActual.Id}";
-            var payload = new
-            {
-                IdTransformacion = asociacionActual.IdTransformacion,
-                IdProyecto = asociacionActual.IdProyecto,
-                FechaAsociacion = asociacionActual.FechaAsociacion
-            };
+            await servicioApi.ActualizarAsync("proyectostransformacion", "id", asociacionActual.Id, asociacionActual);
 
-            var resp = await cliente.PutAsJsonAsync(ruta, payload);
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación actualizada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-            }
-            else
-            {
-                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación actualizada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
         }
         catch (Exception ex)
         {
@@ -274,22 +240,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyectosTransformacion");
-            var ruta = $"{urlBaseApi}/id/{id}";
-            var resp = await cliente.DeleteAsync(ruta);
+            await servicioApi.EliminarAsync("proyectostransformacion", "id", id);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación eliminada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación eliminada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -302,10 +258,9 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyectosTransformacion");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            await servicioApi.ObtenerTodosAsync<ProyectosTransformacion>("proyectostransformacion");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {

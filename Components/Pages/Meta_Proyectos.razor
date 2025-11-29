@@ -1,16 +1,18 @@
 @page "/meta-proyecto"
-@using System.Net.Http.Json
+@using System.ComponentModel.DataAnnotations
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<PageTitle>Gestión de Meta-Proyecto</PageTitle>
+<PageTitle>Gestión Meta–Proyecto</PageTitle>
 
-<!-- ENCABEZADO -->
+<!-- ENCABEZADO PRINCIPAL -->
 <div class="d-flex align-items-center mb-3">
-    <i class="bi bi-diagram-3 fs-3 text-primary me-2"></i>
-    <h3 class="mb-0 fw-bold">Gestión de Asociación Meta - Proyecto</h3>
+    <i class="bi bi-flag fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión Meta–Proyecto</h3>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(mensaje))
@@ -20,7 +22,7 @@
     </div>
 }
 
-<!-- FORMULARIO -->
+<!-- BLOQUE FORMULARIO -->
 <div class="card border-primary shadow-sm mb-4">
     <div class="card-header bg-primary text-white fw-bold">
         <i class="bi bi-pencil-square me-2"></i>Formulario de Asociación
@@ -28,15 +30,15 @@
 
     <div class="card-body">
         <div class="d-flex flex-wrap gap-2 mb-3">
-            <button class="btn btn-outline-secondary" @onclick="ProbarConexion"><i class="bi bi-wifi"></i></button>
-            <button class="btn btn-outline-primary" @onclick="CargarAsociaciones"><i class="bi bi-list"></i></button>
-            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario"><i class="bi bi-eraser"></i></button>
-        </div>
-
-        <div class="input-group mb-4">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <InputNumber class="form-control" placeholder="Ingrese ID de asociación" @bind-Value="idBusqueda" />
-            <button class="btn btn-secondary" @onclick="BuscarPorId"><i class="bi bi-arrow-right-circle"></i></button>
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion">
+                <i class="bi bi-wifi"></i>
+            </button>
+            <button class="btn btn-outline-primary" @onclick="CargarAsociaciones">
+                <i class="bi bi-list"></i>
+            </button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">
+                <i class="bi bi-eraser"></i>
+            </button>
         </div>
 
         <EditForm Model="asociacionActual" OnValidSubmit="GuardarSegunEstado">
@@ -44,10 +46,10 @@
             <ValidationSummary />
 
             <div class="row g-3">
-                <div class="col-md-5">
+                <div class="col-md-6">
                     <label class="form-label">Meta Estratégica *</label>
                     <InputSelect class="form-select" @bind-Value="asociacionActual.IdMeta">
-                        <option value="0">-- Seleccione --</option>
+                        <option value="0">-- Seleccione Meta --</option>
                         @foreach (var m in listaMetas)
                         {
                             <option value="@m.Id">@m.Titulo</option>
@@ -56,10 +58,10 @@
                     <ValidationMessage For="@(() => asociacionActual.IdMeta)" />
                 </div>
 
-                <div class="col-md-5">
+                <div class="col-md-6">
                     <label class="form-label">Proyecto *</label>
                     <InputSelect class="form-select" @bind-Value="asociacionActual.IdProyecto">
-                        <option value="0">-- Seleccione --</option>
+                        <option value="0">-- Seleccione Proyecto --</option>
                         @foreach (var p in listaProyectos)
                         {
                             <option value="@p.Id">@p.Titulo</option>
@@ -68,14 +70,16 @@
                     <ValidationMessage For="@(() => asociacionActual.IdProyecto)" />
                 </div>
 
-                <div class="col-md-2">
+                <div class="col-md-6">
                     <label class="form-label">Fecha Asociación</label>
                     <InputDate class="form-control" @bind-Value="asociacionActual.FechaAsociacion" />
                 </div>
             </div>
 
             <div class="mt-4 d-flex flex-wrap gap-2">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i></button>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i>
+                </button>
                 <button type="button" class="btn btn-warning" @onclick="ActualizarAsociacion" disabled="@(!existeAsociacion)">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
@@ -87,7 +91,7 @@
     </div>
 </div>
 
-<!-- LISTA -->
+<!-- BLOQUE LISTA -->
 <div class="card border-primary shadow-sm">
     <div class="card-header bg-primary text-white fw-bold">
         <i class="bi bi-table me-2"></i>Lista de Asociaciones
@@ -110,7 +114,6 @@
                 <table class="table table-striped align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
                             <th>Meta Estratégica</th>
                             <th>Proyecto</th>
                             <th>Fecha Asociación</th>
@@ -121,10 +124,9 @@
                         @foreach (var a in listaAsociaciones)
                         {
                             <tr>
-                                <td>@a.Id</td>
                                 <td>@GetMetaNombre(a.IdMeta)</td>
                                 <td>@GetProyectoNombre(a.IdProyecto)</td>
-                                <td>@(a.FechaAsociacion?.ToString("yyyy-MM-dd") ?? "-")</td>
+                                <td>@a.FechaAsociacion?.ToString("yyyy-MM-dd")</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(a))">
                                         <i class="bi bi-upload"></i>
@@ -150,7 +152,6 @@
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
-    private const string urlBaseApi = "api/meta_proyecto";
 
     protected override async Task OnInitializedAsync()
     {
@@ -162,11 +163,14 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiMeta_Proyecto");
-            listaMetas = (await cliente.GetFromJsonAsync<RespuestaApi<List<MetaEstrategica>>>("api/metaestrategica"))?.Datos ?? new();
-            listaProyectos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Proyecto>>>("api/proyecto"))?.Datos ?? new();
+            listaMetas = await servicioApi.ObtenerTodosAsync<MetaEstrategica>("metaestrategica") ?? new();
+            listaProyectos = await servicioApi.ObtenerTodosAsync<Proyecto>("proyecto") ?? new();
         }
-        catch { }
+        catch
+        {
+            listaMetas = new();
+            listaProyectos = new();
+        }
     }
 
     private async Task CargarAsociaciones()
@@ -174,10 +178,9 @@
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiMeta_Proyecto");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<MetaProyecto>>>(urlBaseApi);
-            listaAsociaciones = resp?.Datos ?? new();
+            listaAsociaciones = await servicioApi.ObtenerTodosAsync<MetaProyecto>("meta_proyecto") ?? new();
 
+            // Rellenar nombres auxiliares si tu modelo los usa (NotMapped)
             foreach (var a in listaAsociaciones)
             {
                 a.MetaNombre = GetMetaNombre(a.IdMeta);
@@ -189,7 +192,7 @@
         }
         catch (Exception ex)
         {
-            mensaje = $"Error al listar: {ex.Message}";
+            mensaje = $"Error al listar asociaciones: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
         finally { cargando = false; }
@@ -206,11 +209,13 @@
 
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiMeta_Proyecto");
-            var ruta = $"{urlBaseApi}/id/{idBusqueda}";
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<MetaProyecto>>>(ruta);
+            var encontrado = await servicioApi.ObtenerPorClaveAsync<MetaProyecto>(
+                "meta_proyecto",
+                "id",
+                idBusqueda
+            );
 
-            if (resp?.Datos is null || !resp.Datos.Any())
+            if (encontrado == null)
             {
                 mensaje = $"No se encontró una asociación con ID {idBusqueda}.";
                 claseAviso = "alert alert-warning";
@@ -219,8 +224,9 @@
                 return;
             }
 
-            asociacionActual = resp.Datos.First();
+            asociacionActual = encontrado;
             existeAsociacion = true;
+
             mensaje = "Asociación cargada.";
             claseAviso = "alert alert-success";
         }
@@ -243,29 +249,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiMeta_Proyecto");
+            await servicioApi.CrearAsync("meta_proyecto", asociacionActual);
 
-            // ⚙️ Payload filtrado (sin NotMapped)
-            var payload = new
-            {
-                IdMeta = asociacionActual.IdMeta,
-                IdProyecto = asociacionActual.IdProyecto,
-                FechaAsociacion = asociacionActual.FechaAsociacion
-            };
-
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación creada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación creada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -278,29 +267,11 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiMeta_Proyecto");
-            var ruta = $"{urlBaseApi}/id/{asociacionActual.Id}";
+            await servicioApi.ActualizarAsync("meta_proyecto", "id", asociacionActual.Id, asociacionActual);
 
-            // ⚙️ Payload filtrado (sin NotMapped)
-            var payload = new
-            {
-                IdMeta = asociacionActual.IdMeta,
-                IdProyecto = asociacionActual.IdProyecto,
-                FechaAsociacion = asociacionActual.FechaAsociacion
-            };
-
-            var resp = await cliente.PutAsJsonAsync(ruta, payload);
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación actualizada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-            }
-            else
-            {
-                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación actualizada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
         }
         catch (Exception ex)
         {
@@ -312,7 +283,12 @@
     private async Task ConfirmarEliminar()
     {
         if (asociacionActual.Id == 0) return;
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar la asociación #{asociacionActual.Id}?");
+
+        bool confirmado = await JS.InvokeAsync<bool>(
+            "confirm",
+            $"¿Eliminar la asociación #{asociacionActual.Id}?"
+        );
+
         if (confirmado)
             await EliminarAsociacion(asociacionActual.Id);
     }
@@ -321,22 +297,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiMeta_Proyecto");
-            var ruta = $"{urlBaseApi}/id/{id}";
-            var resp = await cliente.DeleteAsync(ruta);
+            await servicioApi.EliminarAsync("meta_proyecto", "id", id);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación eliminada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación eliminada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -349,10 +315,9 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiMeta_Proyecto");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            await servicioApi.ObtenerTodosAsync<MetaProyecto>("meta_proyecto");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {

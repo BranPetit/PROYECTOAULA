@@ -2,28 +2,26 @@
 @using System.Net.Http.Json
 @using System.ComponentModel.DataAnnotations
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
-@inject IJSRuntime JS
+@using FrontendBlazorApi.Servicios // Añadido
+@inherits PaginaAutenticada // Añadido
+@inject ServicioApiGenerico servicioApi // Cambiado
 @rendermode InteractiveServer
 
 <PageTitle>Transformaciones Institucionales</PageTitle>
 
 <h3>Gestión de Transformaciones Institucionales</h3>
 
-<!-- Botones globales -->
 <div class="mb-3 d-flex gap-2">
     <button type="button" class="btn btn-outline-secondary" @onclick="ProbarConexion">Probar conexión</button>
     <button type="button" class="btn btn-outline-primary" @onclick="CargarTransformaciones">Mostrar todos</button>
     <button type="button" class="btn btn-outline-dark" @onclick="LimpiarFormulario">Limpiar</button>
 </div>
 
-<!-- Buscador por ID -->
 <div class="mb-3 d-flex gap-2">
     <InputNumber class="form-control" placeholder="Ingrese ID para buscar" @bind-Value="idBusqueda" />
     <button type="button" class="btn btn-secondary" @onclick="BuscarPorId">Buscar</button>
 </div>
 
-<!-- Mensajes de estado -->
 @if (!string.IsNullOrWhiteSpace(mensaje))
 {
     <div class="@claseAviso" role="alert">@mensaje</div>
@@ -58,7 +56,7 @@
     <div class="mt-3 d-flex flex-wrap gap-2">
         <button type="submit" class="btn btn-primary">@textoBotonGuardar</button>
         <button type="button" class="btn btn-warning" @onclick="ActualizarTransformacion" disabled="@(!existeTransformacion)">Actualizar</button>
-        <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" disabled="@(!existeTransformacion)">Eliminar</button>
+        <button type="button" class="btn btn-danger" @onclick="EliminarTransformacion" disabled="@(!existeTransformacion)">Eliminar</button>
     </div>
 </EditForm>
 
@@ -116,21 +114,26 @@ else
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
 
-    private const string urlBaseApi = "api/transformacioninstitucional";
+    // NOTA: Se elimina la constante urlBaseApi
 
     protected override async Task OnInitializedAsync()
     {
         await CargarTransformaciones();
     }
 
+    // ---------------------------------------------------------
+    // OBTENER TODOS
+    // ---------------------------------------------------------
     private async Task CargarTransformaciones()
     {
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
-            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<TransformacionInstitucional>>>(urlBaseApi);
-            listaTransformaciones = respuesta?.Datos ?? new();
+
+            // Uso de servicioApi en lugar de HttpClient
+            listaTransformaciones =
+                await servicioApi.ObtenerTodosAsync<TransformacionInstitucional>("transformacioninstitucional");
+
             mensaje = $"Se cargaron {listaTransformaciones.Count} transformaciones.";
             claseAviso = "alert alert-success";
         }
@@ -142,6 +145,9 @@ else
         finally { cargando = false; }
     }
 
+    // ---------------------------------------------------------
+    // BUSCAR POR ID
+    // ---------------------------------------------------------
     private async Task BuscarPorId()
     {
         if (idBusqueda == 0)
@@ -153,11 +159,11 @@ else
 
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
-            var ruta = $"{urlBaseApi}/id/{idBusqueda}";
-            var respuesta = await cliente.GetFromJsonAsync<RespuestaApi<List<TransformacionInstitucional>>>(ruta);
+            // Uso de servicioApi en lugar de HttpClient
+            var encontrado = await servicioApi.ObtenerPorClaveAsync<TransformacionInstitucional>(
+                "transformacioninstitucional", "id", idBusqueda);
 
-            if (respuesta?.Datos is null || !respuesta.Datos.Any())
+            if (encontrado == null)
             {
                 mensaje = $"No se encontró la transformación institucional con ID {idBusqueda}.";
                 claseAviso = "alert alert-warning";
@@ -167,7 +173,6 @@ else
                 return;
             }
 
-            var encontrado = respuesta.Datos.First();
             transformacionActual = encontrado;
             existeTransformacion = true;
             textoBotonGuardar = "Actualizar";
@@ -176,7 +181,8 @@ else
         }
         catch (Exception ex)
         {
-            mensaje = $"No existe la transformación con ID {idBusqueda}: {ex.Message}";
+            // Manejo de excepción simplificado al usar servicioApi
+            mensaje = $"Error al buscar: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
     }
@@ -189,32 +195,21 @@ else
             await CrearTransformacion();
     }
 
+    // ---------------------------------------------------------
+    // CREAR
+    // ---------------------------------------------------------
     private async Task CrearTransformacion()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
-            var transformacionParaCrear = new
-            {
-                CodigoTI = transformacionActual.CodigoTI,
-                Nombre = transformacionActual.Nombre,
-                Descripcion = transformacionActual.Descripcion
-            };
+            // Uso de servicioApi en lugar de HttpClient
+            await servicioApi.CrearAsync("transformacioninstitucional", transformacionActual);
 
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, transformacionParaCrear);
+            mensaje = "Transformación creada correctamente.";
+            claseAviso = "alert alert-success";
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Transformación creada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarTransformaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            await CargarTransformaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -223,33 +218,20 @@ else
         }
     }
 
+    // ---------------------------------------------------------
+    // ACTUALIZAR
+    // ---------------------------------------------------------
     private async Task ActualizarTransformacion()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
-            var ruta = $"{urlBaseApi}/id/{transformacionActual.Id}";
+            // Uso de servicioApi en lugar de HttpClient
+            await servicioApi.ActualizarAsync(
+                "transformacioninstitucional", "id", transformacionActual.Id, transformacionActual);
 
-            var transformacionParaActualizar = new
-            {
-                CodigoTI = transformacionActual.CodigoTI,
-                Nombre = transformacionActual.Nombre,
-                Descripcion = transformacionActual.Descripcion
-            };
-
-            var resp = await cliente.PutAsJsonAsync(ruta, transformacionParaActualizar);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Actualizado correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarTransformaciones();
-            }
-            else
-            {
-                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Actualizado correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarTransformaciones();
         }
         catch (Exception ex)
         {
@@ -258,33 +240,23 @@ else
         }
     }
 
-    private async Task ConfirmarEliminar()
-    {
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Seguro que desea eliminar la transformación institucional con ID {transformacionActual.Id}?");
-        if (confirmado)
-            await EliminarTransformacion();
-    }
+    // NOTA: Se elimina el método ConfirmarEliminar y se renombra EliminarTransformacion.
 
+    // ---------------------------------------------------------
+    // ELIMINAR
+    // ---------------------------------------------------------
     private async Task EliminarTransformacion()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
-            var ruta = $"{urlBaseApi}/id/{transformacionActual.Id}";
-            var resp = await cliente.DeleteAsync(ruta);
+            // Uso de servicioApi en lugar de HttpClient
+            await servicioApi.EliminarAsync("transformacioninstitucional", "id", transformacionActual.Id);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Eliminado correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarTransformaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Eliminado correctamente.";
+            claseAviso = "alert alert-success";
+
+            await CargarTransformaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -293,14 +265,19 @@ else
         }
     }
 
+    // ---------------------------------------------------------
+    // PROBAR CONEXIÓN
+    // ---------------------------------------------------------
     private async Task ProbarConexion()
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiTransformacionInstitucional");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            // Uso de servicioApi en lugar de HttpClient
+            // Se asume que ObtenerTodosAsync funciona como prueba de conexión
+            await servicioApi.ObtenerTodosAsync<TransformacionInstitucional>("transformacioninstitucional");
+
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
