@@ -1,7 +1,9 @@
 @page "/archivoentregable"
-@using System.Net.Http.Json
+@using System.ComponentModel.DataAnnotations
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
@@ -128,7 +130,6 @@
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
-    private const string urlBaseApi = "api/archivo_entregable";
 
     protected override async Task OnInitializedAsync()
     {
@@ -141,8 +142,7 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            listaArchivos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Archivo>>>("api/archivo"))?.Datos ?? new();
+            listaArchivos = await servicioApi.ObtenerTodosAsync<Archivo>("archivo");
         }
         catch { }
     }
@@ -151,8 +151,7 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            listaEntregables = (await cliente.GetFromJsonAsync<RespuestaApi<List<Entregable>>>("api/entregable"))?.Datos ?? new();
+            listaEntregables = await servicioApi.ObtenerTodosAsync<Entregable>("entregable");
         }
         catch { }
     }
@@ -162,9 +161,7 @@
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Archivo_Entregable>>>(urlBaseApi);
-            listaAsociaciones = resp?.Datos ?? new();
+            listaAsociaciones = await servicioApi.ObtenerTodosAsync<Archivo_Entregable>("archivo_entregable");
 
             foreach (var a in listaAsociaciones)
             {
@@ -187,67 +184,16 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
+            await servicioApi.CrearAsync("archivo_entregable", asociacionActual);
 
-            // Construir payload que NO incluya propiedades [NotMapped]
-            var payload = new
-            {
-                idarchivo = asociacionActual.IdArchivo,
-                identregable = asociacionActual.IdEntregable
-            };
-
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación creada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación creada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
             mensaje = $"Error al crear: {ex.Message}";
-            claseAviso = "alert alert-danger";
-        }
-    }
-
-    private async Task ActualizarAsociacionConPayload()
-    {
-        try
-        {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            var ruta = $"{urlBaseApi}/{asociacionActual.IdArchivo}/{asociacionActual.IdEntregable}";
-
-            var payload = new
-            {
-                idarchivo = asociacionActual.IdArchivo,
-                identregable = asociacionActual.IdEntregable
-            };
-
-            var resp = await cliente.PutAsJsonAsync(ruta, payload);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación actualizada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-            }
-            else
-            {
-                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
-        }
-        catch (Exception ex)
-        {
-            mensaje = $"Error al actualizar: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
     }
@@ -264,22 +210,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            var ruta = $"{urlBaseApi}/{asociacionActual.IdArchivo}/{asociacionActual.IdEntregable}";
-            var resp = await cliente.DeleteAsync(ruta);
+            await servicioApi.EliminarAsync("archivo_entregable", "idarchivo", asociacionActual.IdArchivo);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación eliminada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación eliminada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -292,10 +228,9 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo_Entregable");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            await servicioApi.ObtenerTodosAsync<Archivo_Entregable>("archivo_entregable");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {

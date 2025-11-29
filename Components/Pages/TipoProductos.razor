@@ -214,40 +214,40 @@ else
         }
     }
 
-private async Task ActualizarTipoProducto()
-{
-    try
+    private async Task ActualizarTipoProducto()
     {
-        var cliente = fabricaHttp.CreateClient("ApiTipoProducto");
-        var ruta = $"{urlBaseApi}/id/{tipoProductoActual.Id}";
-
-        // Enviar solo los campos editables, sin Id
-        var tipoProductoParaActualizar = new
+        try
         {
-            Nombre = tipoProductoActual.Nombre,
-            Descripcion = tipoProductoActual.Descripcion
-        };
+            var cliente = fabricaHttp.CreateClient("ApiTipoProducto");
+            var ruta = $"{urlBaseApi}/id/{tipoProductoActual.Id}";
 
-        var resp = await cliente.PutAsJsonAsync(ruta, tipoProductoParaActualizar);
+            // Enviar solo los campos editables, sin Id
+            var tipoProductoParaActualizar = new
+            {
+                Nombre = tipoProductoActual.Nombre,
+                Descripcion = tipoProductoActual.Descripcion
+            };
 
-        if (resp.IsSuccessStatusCode)
-        {
-            mensaje = "Actualizado correctamente.";
-            claseAviso = "alert alert-success";
-            await CargarTiposProducto();
+            var resp = await cliente.PutAsJsonAsync(ruta, tipoProductoParaActualizar);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = "Actualizado correctamente.";
+                claseAviso = "alert alert-success";
+                await CargarTiposProducto();
+            }
+            else
+            {
+                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
+                claseAviso = "alert alert-danger";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
+            mensaje = $"Error al actualizar: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
     }
-    catch (Exception ex)
-    {
-        mensaje = $"Error al actualizar: {ex.Message}";
-        claseAviso = "alert alert-danger";
-    }
-}
 
     private async Task ConfirmarEliminar()
     {

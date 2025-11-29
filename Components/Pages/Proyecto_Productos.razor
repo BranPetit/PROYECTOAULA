@@ -1,16 +1,17 @@
 @page "/proyecto-producto"
-@using System.Net.Http.Json
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<PageTitle>Gestión de Proyectos y Productos</PageTitle>
+<PageTitle>Gestión Proyecto Producto</PageTitle>
 
-<!-- ENCABEZADO -->
+<!-- ENCABEZADO PRINCIPAL -->
 <div class="d-flex align-items-center mb-3">
-    <i class="bi bi-diagram-3 fs-3 text-primary me-2"></i>
-    <h3 class="mb-0 fw-bold">Gestión de Proyectos y Productos</h3>
+    <i class="bi bi-link-45deg fs-3 text-primary me-2"></i>
+    <h3 class="mb-0 fw-bold">Gestión Proyecto–Producto</h3>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(mensaje))
@@ -20,7 +21,7 @@
     </div>
 }
 
-<!-- FORMULARIO -->
+<!-- BLOQUE FORMULARIO -->
 <div class="card border-primary shadow-sm mb-4">
     <div class="card-header bg-primary text-white fw-bold">
         <i class="bi bi-pencil-square me-2"></i>Formulario de Asociación
@@ -28,9 +29,15 @@
 
     <div class="card-body">
         <div class="d-flex flex-wrap gap-2 mb-3">
-            <button class="btn btn-outline-secondary" @onclick="ProbarConexion"><i class="bi bi-wifi"></i></button>
-            <button class="btn btn-outline-primary" @onclick="CargarAsociaciones"><i class="bi bi-list"></i></button>
-            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario"><i class="bi bi-eraser"></i></button>
+            <button class="btn btn-outline-secondary" @onclick="ProbarConexion">
+                <i class="bi bi-wifi"></i>
+            </button>
+            <button class="btn btn-outline-primary" @onclick="CargarAsociaciones">
+                <i class="bi bi-list"></i>
+            </button>
+            <button class="btn btn-outline-dark" @onclick="LimpiarFormulario">
+                <i class="bi bi-eraser"></i>
+            </button>
         </div>
 
         <EditForm Model="asociacionActual" OnValidSubmit="GuardarSegunEstado">
@@ -38,10 +45,10 @@
             <ValidationSummary />
 
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">Proyecto *</label>
                     <InputSelect class="form-select" @bind-Value="asociacionActual.IdProyecto">
-                        <option value="0">-- Seleccione --</option>
+                        <option value="0">-- Seleccione Proyecto --</option>
                         @foreach (var p in listaProyectos)
                         {
                             <option value="@p.Id">@p.Titulo</option>
@@ -50,26 +57,28 @@
                     <ValidationMessage For="@(() => asociacionActual.IdProyecto)" />
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">Producto *</label>
                     <InputSelect class="form-select" @bind-Value="asociacionActual.IdProducto">
-                        <option value="0">-- Seleccione --</option>
-                        @foreach (var prod in listaProductos)
+                        <option value="0">-- Seleccione Producto --</option>
+                        @foreach (var pr in listaProductos)
                         {
-                            <option value="@prod.Id">@prod.Titulo</option>
+                            <option value="@pr.Id">@pr.Titulo</option>
                         }
                     </InputSelect>
                     <ValidationMessage For="@(() => asociacionActual.IdProducto)" />
                 </div>
 
-                <div class="col-md-4">
-                    <label class="form-label">Fecha de Asociación</label>
+                <div class="col-md-6">
+                    <label class="form-label">Fecha Asociación</label>
                     <InputDate class="form-control" @bind-Value="asociacionActual.FechaAsociacion" />
                 </div>
             </div>
 
             <div class="mt-4 d-flex flex-wrap gap-2">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i></button>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i>
+                </button>
                 <button type="button" class="btn btn-warning" @onclick="ActualizarAsociacion" disabled="@(!existeAsociacion)">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
@@ -81,10 +90,10 @@
     </div>
 </div>
 
-<!-- LISTA -->
+<!-- BLOQUE LISTA -->
 <div class="card border-primary shadow-sm">
     <div class="card-header bg-primary text-white fw-bold">
-        <i class="bi bi-table me-2"></i>Lista de Asociaciones Proyecto - Producto
+        <i class="bi bi-table me-2"></i>Lista de Asociaciones
     </div>
 
     <div class="card-body">
@@ -104,7 +113,6 @@
                 <table class="table table-striped align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
                             <th>Proyecto</th>
                             <th>Producto</th>
                             <th>Fecha Asociación</th>
@@ -115,10 +123,9 @@
                         @foreach (var a in listaAsociaciones)
                         {
                             <tr>
-                                <td>@a.Id</td>
-                                <td>@a.ProyectoNombre</td>
-                                <td>@a.ProductoNombre</td>
-                                <td>@(a.FechaAsociacion?.ToString("yyyy-MM-dd") ?? "-")</td>
+                                <td>@GetProyectoTitulo(a.IdProyecto)</td>
+                                <td>@GetProductoTitulo(a.IdProducto)</td>
+                                <td>@a.FechaAsociacion?.ToString("yyyy-MM-dd")</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" @onclick="@(() => CargarEnFormulario(a))">
                                         <i class="bi bi-upload"></i>
@@ -137,15 +144,13 @@
     private List<ProyectoProducto> listaAsociaciones = new();
     private List<Proyecto> listaProyectos = new();
     private List<Producto> listaProductos = new();
-
     private ProyectoProducto asociacionActual = new();
     private bool existeAsociacion = false;
     private string mensaje = "";
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
-    private const string urlBaseApi = "api/proyecto_producto";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAutenticacionVerificada()
     {
         await CargarOpcionesRelacionadas();
         await CargarAsociaciones();
@@ -155,11 +160,14 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyecto_Producto");
-            listaProyectos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Proyecto>>>("api/proyecto"))?.Datos ?? new();
-            listaProductos = (await cliente.GetFromJsonAsync<RespuestaApi<List<Producto>>>("api/producto"))?.Datos ?? new();
+            listaProyectos = await servicioApi.ObtenerTodosAsync<Proyecto>("proyecto") ?? new();
+            listaProductos = await servicioApi.ObtenerTodosAsync<Producto>("producto") ?? new();
         }
-        catch { }
+        catch
+        {
+            listaProyectos = new();
+            listaProductos = new();
+        }
     }
 
     private async Task CargarAsociaciones()
@@ -167,9 +175,7 @@
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiProyecto_Producto");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<ProyectoProducto>>>(urlBaseApi);
-            listaAsociaciones = resp?.Datos ?? new();
+            listaAsociaciones = await servicioApi.ObtenerTodosAsync<ProyectoProducto>("proyecto_producto") ?? new();
 
             foreach (var a in listaAsociaciones)
             {
@@ -182,7 +188,7 @@
         }
         catch (Exception ex)
         {
-            mensaje = $"Error al listar: {ex.Message}";
+            mensaje = $"Error al listar asociaciones: {ex.Message}";
             claseAviso = "alert alert-danger";
         }
         finally { cargando = false; }
@@ -200,27 +206,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyecto_Producto");
-            var payload = new
-            {
-                IdProyecto = asociacionActual.IdProyecto,
-                IdProducto = asociacionActual.IdProducto,
-                FechaAsociacion = asociacionActual.FechaAsociacion
-            };
+            await servicioApi.CrearAsync("proyecto_producto", asociacionActual);
 
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación creada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación creada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -233,27 +224,11 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyecto_Producto");
-            var ruta = $"{urlBaseApi}/id/{asociacionActual.Id}";
-            var payload = new
-            {
-                IdProyecto = asociacionActual.IdProyecto,
-                IdProducto = asociacionActual.IdProducto,
-                FechaAsociacion = asociacionActual.FechaAsociacion
-            };
+            await servicioApi.ActualizarAsync("proyecto_producto", "id", asociacionActual.Id, asociacionActual);
 
-            var resp = await cliente.PutAsJsonAsync(ruta, payload);
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación actualizada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-            }
-            else
-            {
-                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación actualizada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
         }
         catch (Exception ex)
         {
@@ -264,32 +239,22 @@
 
     private async Task ConfirmarEliminar()
     {
-        if (asociacionActual.Id == 0) return;
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar la asociación Proyecto #{asociacionActual.Id}?");
+        if (asociacionActual.IdProyecto == 0 || asociacionActual.IdProducto == 0) return;
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar relación Proyecto {GetProyectoTitulo(asociacionActual.IdProyecto)} con Producto {GetProductoTitulo(asociacionActual.IdProducto)}?");
         if (confirmado)
-            await EliminarAsociacion(asociacionActual.Id);
+            await EliminarAsociacion(asociacionActual.IdProyecto, asociacionActual.IdProducto);
     }
 
-    private async Task EliminarAsociacion(int id)
+    private async Task EliminarAsociacion(int idProyecto, int idProducto)
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyecto_Producto");
-            var ruta = $"{urlBaseApi}/id/{id}";
-            var resp = await cliente.DeleteAsync(ruta);
+            await servicioApi.EliminarAsync("proyecto_producto", "id", "id");
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación eliminada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación eliminada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -302,10 +267,9 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiProyecto_Producto");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            await servicioApi.ObtenerTodosAsync<ProyectoProducto>("proyecto_producto");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
@@ -334,4 +298,10 @@
         existeAsociacion = false;
         mensaje = "";
     }
+
+    private string GetProyectoTitulo(int id)
+        => listaProyectos.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
+
+    private string GetProductoTitulo(int id)
+        => listaProductos.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
 }

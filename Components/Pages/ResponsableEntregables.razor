@@ -1,7 +1,8 @@
 @page "/responsable-entregable"
-@using System.Net.Http.Json
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
@@ -143,9 +144,8 @@
     private string claseAviso = "alert alert-info";
     private bool cargando = false;
     private string textoBusqueda = "";
-    private const string urlBaseApi = "api/Responsable_Entregable";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAutenticacionVerificada()
     {
         await CargarResponsables();
         await CargarEntregables();
@@ -156,9 +156,7 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Responsable>>>("api/responsable");
-            listaResponsables = resp?.Datos ?? new();
+            listaResponsables = await servicioApi.ObtenerTodosAsync<Responsable>("responsable") ?? new();
         }
         catch { listaResponsables = new(); }
     }
@@ -167,9 +165,7 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Entregable>>>("api/entregable");
-            listaEntregables = resp?.Datos ?? new();
+            listaEntregables = await servicioApi.ObtenerTodosAsync<Entregable>("entregable") ?? new();
         }
         catch { listaEntregables = new(); }
     }
@@ -179,9 +175,7 @@
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Responsable_Entregable>>>(urlBaseApi);
-            listaAsociaciones = resp?.Datos ?? new();
+            listaAsociaciones = await servicioApi.ObtenerTodosAsync<Responsable_Entregable>("Responsable_Entregable") ?? new();
             FiltrarAsociaciones();
             mensaje = $"Se cargaron {listaAsociaciones.Count} asociación(es).";
             claseAviso = "alert alert-success";
@@ -223,21 +217,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, asociacionActual);
+            await servicioApi.CrearAsync("Responsable_Entregable", asociacionActual);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación creada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación creada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -259,22 +244,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
-            var ruta = $"{urlBaseApi}/{asociacionActual.IdResponsable}/{asociacionActual.IdEntregable}";
-            var resp = await cliente.DeleteAsync(ruta);
+            await servicioApi.EliminarAsync("Responsable_Entregable", "IdResponsable", asociacionActual.IdResponsable);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Asociación eliminada correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarAsociaciones();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Asociación eliminada correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarAsociaciones();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -287,10 +262,9 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiResponsable_Entregable");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            await servicioApi.ObtenerTodosAsync<Responsable_Entregable>("Responsable_Entregable");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
@@ -321,7 +295,7 @@
 
     private string GetResponsableNombre(int id) => listaResponsables.FirstOrDefault(x => x.Id == id)?.Nombre ?? $"#{id}";
     private string GetEntregableTitulo(int id) => listaEntregables.FirstOrDefault(x => x.Id == id)?.Titulo ?? $"#{id}";
-    
+
     private string TextoBusqueda
     {
         get => textoBusqueda;

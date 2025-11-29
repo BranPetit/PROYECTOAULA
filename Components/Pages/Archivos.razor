@@ -1,7 +1,8 @@
 @page "/archivos"
-@using System.Net.Http.Json
 @using FrontendBlazorApi.Models
-@inject IHttpClientFactory fabricaHttp
+@using FrontendBlazorApi.Servicios
+@inherits PaginaAutenticada
+@inject ServicioApiGenerico servicioApi
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
@@ -163,8 +164,7 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo");
-            listaUsuarios = (await cliente.GetFromJsonAsync<RespuestaApi<List<Usuario>>>("api/usuario"))?.Datos ?? new();
+            listaUsuarios = await servicioApi.ObtenerTodosAsync<Usuario>("usuario");
         }
         catch { }
     }
@@ -174,9 +174,7 @@
         try
         {
             cargando = true;
-            var cliente = fabricaHttp.CreateClient("ApiArchivo");
-            var resp = await cliente.GetFromJsonAsync<RespuestaApi<List<Archivo>>>(urlBaseApi);
-            listaArchivos = resp?.Datos ?? new();
+            listaArchivos = await servicioApi.ObtenerTodosAsync<Archivo>("archivo");
 
             foreach (var a in listaArchivos)
             {
@@ -206,32 +204,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo");
+            await servicioApi.CrearAsync("archivo", archivoActual);
 
-            // 🔹 Filtro de propiedades válidas
-            var payload = new
-            {
-                IdUsuario = archivoActual.IdUsuario,
-                Nombre = archivoActual.Nombre,
-                Tipo = archivoActual.Tipo,
-                Ruta = archivoActual.Ruta,
-                Fecha = archivoActual.Fecha
-            };
-
-            var resp = await cliente.PostAsJsonAsync(urlBaseApi, payload);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Archivo creado correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarArchivos();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al crear: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Archivo creado correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarArchivos();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -244,32 +222,11 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo");
-            var ruta = $"{urlBaseApi}/id/{archivoActual.Id}";
+            await servicioApi.ActualizarAsync("archivo", "id", archivoActual.Id, archivoActual);
 
-            // 🔹 Mismo filtro para evitar enviar campos no mapeados
-            var payload = new
-            {
-                IdUsuario = archivoActual.IdUsuario,
-                Nombre = archivoActual.Nombre,
-                Tipo = archivoActual.Tipo,
-                Ruta = archivoActual.Ruta,
-                Fecha = archivoActual.Fecha
-            };
-
-            var resp = await cliente.PutAsJsonAsync(ruta, payload);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Archivo actualizado correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarArchivos();
-            }
-            else
-            {
-                mensaje = $"Error al actualizar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Archivo actualizado correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarArchivos();
         }
         catch (Exception ex)
         {
@@ -290,22 +247,12 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo");
-            var ruta = $"{urlBaseApi}/id/{id}";
-            var resp = await cliente.DeleteAsync(ruta);
+            await servicioApi.EliminarAsync("archivo", "id", id);
 
-            if (resp.IsSuccessStatusCode)
-            {
-                mensaje = "Archivo eliminado correctamente.";
-                claseAviso = "alert alert-success";
-                await CargarArchivos();
-                LimpiarFormulario();
-            }
-            else
-            {
-                mensaje = $"Error al eliminar: {await resp.Content.ReadAsStringAsync()}";
-                claseAviso = "alert alert-danger";
-            }
+            mensaje = "Archivo eliminado correctamente.";
+            claseAviso = "alert alert-success";
+            await CargarArchivos();
+            LimpiarFormulario();
         }
         catch (Exception ex)
         {
@@ -318,10 +265,9 @@
     {
         try
         {
-            var cliente = fabricaHttp.CreateClient("ApiArchivo");
-            var resp = await cliente.GetAsync(urlBaseApi);
-            mensaje = resp.IsSuccessStatusCode ? "Conexión OK." : $"Respuesta {(int)resp.StatusCode}";
-            claseAviso = resp.IsSuccessStatusCode ? "alert alert-success" : "alert alert-warning";
+            await servicioApi.ObtenerTodosAsync<Archivo>("archivo");
+            mensaje = "Conexión OK.";
+            claseAviso = "alert alert-success";
         }
         catch (Exception ex)
         {
