@@ -8,262 +8,247 @@
 <PageTitle>Inicio de Sesión</PageTitle>
 
 <style>
-    .login-container {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #1e3c72, #2a5298);
-        padding: 20px;
-        font-family: 'Segoe UI', sans-serif;
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, sans-serif;
     }
 
-    /* TARJETA PRINCIPAL */
-    .login-card {
-        background: #FFFFFF;
-        border-radius: 20px;
-        box-shadow: 0 15px 50px rgba(0,0,0,0.25);
-        display: flex;
-        max-width: 1050px;
+    .login-bg {
+        height: 100vh;
         width: 100%;
-        overflow: hidden;
-    }
-
-    /* =======================================
-       LADO IZQUIERDO – PANEL CORPORATIVO
-       ======================================= */
-
-    .login-image-section {
-        flex: 1;
-        background: linear-gradient(135deg, #1e3c72, #2a5298);
-        padding: 60px 40px;
-        color: white;
+        background: radial-gradient(circle at top left, #ddebff, #b5d0ff 60%, #8cb3ff);
         display: flex;
-        flex-direction: column;
         justify-content: center;
+        align-items: center;
+        overflow: hidden;
         position: relative;
     }
 
-        .login-image-section::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: url('https://www.transparenttextures.com/patterns/asfalt-light.png');
-            opacity: 0.15;
+    /* Círculos decorativos SIN animación */
+    .circle {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.55;
+    }
+
+    .circle1 {
+        width: 380px;
+        height: 380px;
+        background: #7aa8ff;
+        top: -80px;
+        left: -50px;
+    }
+
+    .circle2 {
+        width: 320px;
+        height: 320px;
+        background: #5cb4ff;
+        bottom: -90px;
+        right: -30px;
+    }
+
+    .circle3 {
+        width: 260px;
+        height: 260px;
+        background: #4d9fff;
+        top: 40%;
+        left: 70%;
+    }
+
+    /* Tarjeta principal */
+    .login-card {
+        width: 100%;
+        max-width: 900px;
+        display: flex;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 22px;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        padding: 45px;
+        color: black;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.20);
+    }
+
+    /* Columnas */
+    .login-info {
+        flex: 1;
+        padding-right: 40px;
+        border-right: 1px solid rgba(0,0,0,0.15);
+    }
+
+        .login-info h2 {
+            font-size: 2.4rem;
+            font-weight: 700;
         }
 
-    .login-image-icon {
-        font-size: 110px;
-        margin-bottom: 25px;
-        opacity: 0.9;
-    }
+        .login-info p {
+            opacity: 0.85;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+        }
 
-    .login-image-text h2 {
-        font-size: 2.4rem;
-        font-weight: 700;
-    }
-
-    .login-image-text p {
-        margin-top: 10px;
-        font-size: 1.1rem;
-        opacity: 0.95;
-    }
-
-    .feature-list {
-        margin-top: 25px;
+    .info-bullet {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
         font-size: 1.05rem;
     }
 
-        .feature-list div {
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
+        .info-bullet i {
+            color: #005eff;
+            margin-right: 10px;
+            font-size: 1.2rem;
         }
 
-        .feature-list i {
-            color: #a7e0ff;
-            margin-right: 8px;
-        }
-
-    /* =======================================
-       LADO DERECHO – FORMULARIO
-       ======================================= */
-
-    .login-form-section {
+    /* Formulario */
+    .login-form {
         flex: 1;
-        padding: 55px 50px;
+        padding-left: 40px;
     }
 
-    .login-form-title {
-        font-size: 2.1rem;
+    .login-title {
+        font-size: 2rem;
         font-weight: 700;
-        color: #1e3c72;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
+        color: black;
     }
 
-    .login-form-subtitle {
-        color: #666;
-        margin-bottom: 35px;
+    .login-subtitle {
+        opacity: 0.85;
+        margin-bottom: 30px;
+        color: black;
     }
 
-    .form-floating-custom {
+    .input-group-login {
         position: relative;
-        margin-bottom: 28px;
+        margin-bottom: 25px;
     }
-
-        /* INPUTS */
-        .form-floating-custom .form-control {
-            height: 58px;
-            border-radius: 12px;
-            border: 2px solid #d5d8e0;
-            padding-left: 55px;
-            font-size: 1rem;
-            transition: 0.25s ease;
-        }
-
-            .form-floating-custom .form-control:focus {
-                border-color: #2a5298;
-                box-shadow: 0 0 0 0.18rem rgba(42, 82, 152, 0.25);
-            }
 
     .input-icon {
         position: absolute;
         top: 50%;
-        left: 18px;
+        left: 15px;
         transform: translateY(-50%);
-        font-size: 1.2rem;
-        color: #888;
+        font-size: 1.3rem;
+        color: #005eff;
     }
 
-    /* BOTÓN LOGIN */
+    .login-input {
+        width: 100%;
+        height: 55px;
+        border-radius: 14px;
+        background: white;
+        border: 1px solid #bcd3ff;
+        padding-left: 50px;
+        color: black;
+        font-size: 1rem;
+    }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #005eff;
+            box-shadow: 0 0 10px rgba(0, 94, 255, 0.35);
+        }
+
+    /* Botón */
     .btn-login {
-        height: 58px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #1e3c72, #2a5298);
-        border: none;
+        width: 100%;
+        height: 55px;
+        border-radius: 14px;
+        background: #005eff;
         color: white;
-        font-size: 1.15rem;
+        font-size: 1.2rem;
         font-weight: 600;
-        transition: 0.25s ease;
+        border: none;
+        transition: 0.2s ease;
     }
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(30, 60, 114, 0.4);
+            background: #0047c2;
         }
 
-        .btn-login:active {
-            transform: translateY(0);
-        }
-
-    /* ALERTAS */
+    /* Alertas */
     .alert-modern {
-        background: #ffe1e1;
-        border-left: 6px solid #d9534f;
-        color: #b12a2a;
-        padding: 15px;
+        background: rgba(255, 0, 0, 0.15);
+        border-left: 6px solid #ff3f3f;
+        padding: 12px;
         border-radius: 10px;
         margin-bottom: 20px;
+        color: #b30000;
+        font-weight: 600;
     }
 
-    /* FOOTER */
-    .login-footer {
-        text-align: center;
-        margin-top: 25px;
-        color: #888;
-        font-size: 0.92rem;
-    }
-
-    .login-image-section {
-        text-align: center;
-        padding: 50px 20px;
-    }
-
-    .login-form-section {
-        padding: 40px 30px;
-    }
-
-    }
 </style>
 
-<div class="login-container">
+
+
+<div class="login-bg">
+    <div class="circle circle1"></div>
+    <div class="circle circle2"></div>
+    <div class="circle circle3"></div>
+
     <div class="login-card">
-        <!-- Sección de imagen/ilustración izquierda -->
-        <div class="login-image-section">
-            <div class="login-image-icon">
-                <i class="bi bi-shield-lock-fill"></i>
-            </div>
-            <div class="login-image-text text-center">
-                <h2>Bienvenido de nuevo</h2>
-                <p>Sistema de Gestión Empresarial</p>
-                <p class="mt-4">
-                    <i class="bi bi-check-circle me-2"></i>Gestión de Facturas<br>
-                    <i class="bi bi-check-circle me-2"></i>Control de Inventario<br>
-                    <i class="bi bi-check-circle me-2"></i>Administración de Clientes
-                </p>
-            </div>
+
+        <!-- IZQUIERDA -->
+        <div class="login-info">
+            <h2>Bienvenido</h2>
+            <p>Sistema Integral de Gestión de Proyectos</p>
+
+            <div class="info-bullet"><i class="bi bi-kanban-fill"></i> Planeación estratégica de proyectos</div>
+            <div class="info-bullet"><i class="bi bi-bar-chart-fill"></i> Seguimiento con paneles dinámicos</div>
+            <div class="info-bullet"><i class="bi bi-people-fill"></i> Gestión de roles y equipos</div>
+            <div class="info-bullet"><i class="bi bi-clock-history"></i> Control de tiempos y actividades</div>
+            <div class="info-bullet"><i class="bi bi-folder-check"></i> Administración de documentación</div>
         </div>
 
-        <!-- Sección de formulario derecha -->
-        <div class="login-form-section">
-            <div class="login-form-title">Iniciar Sesión</div>
-            <div class="login-form-subtitle">Ingrese sus credenciales para continuar</div>
+        <!-- FORMULARIO -->
+        <div class="login-form">
+            <div class="login-title">Iniciar Sesión</div>
+            <div class="login-subtitle">Ingrese sus credenciales para continuar</div>
 
-            <!-- Mensajes de alerta -->
             @if (!string.IsNullOrEmpty(mensaje))
             {
-                <div class="alert @claseAviso alert-modern" role="alert">
-                    <i class="bi @iconoMensaje me-2"></i>@mensaje
+                <div class="alert-modern">
+                    <i class="bi bi-exclamation-circle me-2"></i>@mensaje
                 </div>
             }
 
-            <!-- Formulario de login -->
-
-            <EditForm Model="credenciales" OnValidSubmit="IniciarSesion" FormName="FormularioLogin">
+            <EditForm Model="credenciales" OnValidSubmit="IniciarSesion">
                 <DataAnnotationsValidator />
 
-                <!-- Campo de usuario/email -->
-                <div class="form-floating-custom">
-                    <i class="bi bi-person-circle input-icon"></i>
-                    <InputText class="form-control"
+                <div class="input-group-login">
+                    <i class="bi bi-person-fill input-icon"></i>
+                    <InputText class="login-input"
                                @bind-Value="credenciales.Usuario"
-                               placeholder="Correo electrónico"
-                               autocomplete="username" />
+                               placeholder="Correo electrónico" />
                 </div>
 
-                <!-- Campo de contraseña -->
-                <div class="form-floating-custom">
+                <div class="input-group-login">
                     <i class="bi bi-lock-fill input-icon"></i>
                     <InputText type="password"
-                               class="form-control"
+                               class="login-input"
                                @bind-Value="credenciales.Contrasena"
-                               placeholder="Contraseña"
-                               autocomplete="current-password" />
+                               placeholder="Contraseña" />
                 </div>
 
-                <!-- Botón de envío -->
-                <button type="submit" class="btn btn-login w-100" disabled="@cargando">
+                <button type="submit" class="btn-login" disabled="@cargando">
                     @if (cargando)
                     {
-                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                        <span>Verificando...</span>
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        mensaje = "Verificando credenciales...";
                     }
                     else
                     {
-                        <i class="bi bi-box-arrow-in-right me-2"></i>
-                        <span>Iniciar Sesión</span>
+                        <span>Ingresar</span>
                     }
                 </button>
             </EditForm>
-
-            <!-- Footer del formulario -->
-            <div class="login-footer">
-                <i class="bi bi-shield-check me-1"></i>
-                Conexión segura y encriptada
-            </div>
         </div>
     </div>
 </div>
+
 
 @code {
     private Credenciales credenciales = new();

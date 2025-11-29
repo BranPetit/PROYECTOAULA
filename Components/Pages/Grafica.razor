@@ -1,0 +1,141 @@
+﻿@page "/Graficas"
+@inherits PaginaAutenticada
+@inject IJSRuntime JS
+@using FrontendBlazorApi.Servicios
+@using FrontendBlazorApi.Models
+@inject ServicioAutenticacion servicioAuth
+
+@rendermode InteractiveServer
+
+<h3 class="titulo">Avance de Actividades</h3>
+
+@if (!string.IsNullOrWhiteSpace(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (!cargado)
+{
+    <p class="cargando"><i class="bi bi-arrow-repeat"></i> Cargando actividades...</p>
+}
+else if (actividadesFiltradas.Count == 0)
+{
+    <div class="alert alert-info">No existen actividades registradas.</div>
+}
+else
+{
+    <div class="grafica-box">
+        <canvas id="graficaAvance" width="500" height="250"></canvas>
+    </div>
+}
+
+<style>
+    .titulo {
+        font-size: 28px;
+        color: #1a3c7a;
+        margin-bottom: 25px;
+        font-weight: bold;
+    }
+
+    .cargando {
+        font-size: 18px;
+        color: #1a3c7a;
+    }
+
+    .grafica-box {
+        padding: 20px;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #d9d9d9;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        width: 80%;
+    }
+</style>
+
+<!-- CHART.JS + FUNCIÓN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    window.crearGraficaActividades = (titulos, avances) => {
+        const ctx = document.getElementById("graficaAvance");
+        if (!ctx) return;
+
+        if (window.miGraficaActividades) {
+            window.miGraficaActividades.destroy();
+        }
+
+        window.miGraficaActividades = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: titulos,
+                datasets: [{
+                    label: "Avance (%)",
+                    data: avances,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: 100 }
+                }
+            }
+        });
+    };
+</script>
+
+@code {
+
+    private string? error;
+
+    private List<Actividad> actividades = new();
+    private List<Actividad> actividadesFiltradas = new();
+
+    private bool cargado = false;
+
+    [Inject]
+    public ServicioApiGenerico servicioApi { get; set; } = default!;
+
+    // --------------------------------------
+    // CARGA INICIAL
+    // --------------------------------------
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await CargarActividades();
+            cargado = true;
+
+            StateHasChanged();
+
+            if (actividadesFiltradas.Count > 0)
+                await GenerarGrafica();
+        }
+    }
+
+    // --------------------------------------
+    // CARGAR DESDE LA API (MISMO MECANISMO QUE /actividades )
+    // --------------------------------------
+    private async Task CargarActividades()
+    {
+        try
+        {
+            actividades = await servicioApi.ObtenerTodosAsync<Actividad>("actividad");
+            actividadesFiltradas = actividades.ToList();
+        }
+        catch (Exception ex)
+        {
+            error = "Error cargando actividades: " + ex.Message;
+        }
+    }
+
+    // --------------------------------------
+    // GENERAR LA GRÁFICA
+    // --------------------------------------
+    private async Task GenerarGrafica()
+    {
+        var titulos = actividadesFiltradas.Select(a => a.Titulo).ToArray();
+        var avances = actividadesFiltradas.Select(a => a.PorcentajeAvance).ToArray();
+
+        await JS.InvokeVoidAsync("crearGraficaActividades", titulos, avances);
+    }
+}

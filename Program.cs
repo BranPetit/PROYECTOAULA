@@ -27,6 +27,10 @@ builder.Services.AddHttpClient("ApiUsuario", cliente =>
     cliente.BaseAddress = new Uri("http://localhost:5031/");
 });
 
+builder.Services.AddHttpClient("ApiLogSistema", cliente =>
+{
+    cliente.BaseAddress = new Uri("http://localhost:5031/");
+});
 builder.Services.AddHttpClient("ApiTipoProducto", cliente =>
 {
     cliente.BaseAddress = new Uri("http://localhost:5031/");
